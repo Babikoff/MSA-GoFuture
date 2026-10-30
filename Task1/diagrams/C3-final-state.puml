@@ -6,13 +6,12 @@
 ' ## Все взаимодействия между микросервисами - асинхронные через Kafka
 ' ###############################################################################
 
-System_Boundary(go_future_platform, "GoFuture Microservices Platform") {
+System_Boundary(go_future_platform, "GoFuture Platform") {
 
-    ' --- Точки входа (перенесены с C1 step-11) ---
     Component(api_gateway, "API Gateway", "Kong / NGINX", "Маршрутизация, API versioning")
     Component(auth_server, "Auth Server", "Keycloak", "Единый центр аутентификации")
 
-    System_Boundary(microservice_platform, "GoFuture Microservices Platform") {
+    System_Boundary(microservice_platform, "GoFuture Microservices") {
 
         Component(kafka, "Kafka", "Message Broker", "Асинхронная шина событий между микросервисами")
 
