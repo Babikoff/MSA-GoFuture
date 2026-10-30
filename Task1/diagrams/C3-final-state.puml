@@ -18,8 +18,8 @@ System_Boundary(go_future_platform, "GoFuture Platform") {
         ContainerQueue(kafka, "Kafka", "Message Broker", "Асинхронная шина событий между микросервисами")
 
         System_Boundary(booking_service_sys, "Booking Service") {
-            Component(booking_service, "Booking Service", "Python", "Сервис заказов — управление бронированиями", $tags="Orchestrator")
-            ContainerDb(booking_service_db, "Booking Service DB", "PostgreSQL", "Данные бронирований")
+            Component(booking_service, "Booking Service", "Python", "Сервис заказов — управление", $tags="Orchestrator")
+            ContainerDb(booking_service_db, "Booking Service DB", "PostgreSQL", "Данные заказов")
         }
 
         System_Boundary(driver_service_sys, "Driver Service") {

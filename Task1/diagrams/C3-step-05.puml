@@ -173,6 +173,9 @@ Rel(payouts_domain, db_main, "▶ payouts", "прямые SQL")
 Rel(analytics_domain, db_main, "▶ все таблицы", "прямые SQL")
 Rel(fraud_domain, db_main, "▶ payments, bookings", "прямые SQL")
 
+' ### ВРЕМЕННЫЕ СИНХРОНИЗАЦИИ (НА ПЕРИОД МИГРАЦИИ) ###
+BiRel(pricing_service_db, db_main, "Логическая репликация обновлений данных", "SQL", $tags="newRelColor")
+
 ' ### ВНЕШНИЕ ИНТЕГРАЦИИ (оставшиеся в монолите) ###
 Rel(payments_domain, yandex_pay, "▶ платежи", "Yandex Pay API")
 
