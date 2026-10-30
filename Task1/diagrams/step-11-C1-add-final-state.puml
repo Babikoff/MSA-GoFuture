@@ -3,7 +3,7 @@
 
 AddRelTag("newRelColor", $lineColor="green",$textColor="green", $lineStyle=SolidLine())
 AddSystemTag("new", $bgColor="green", $fontColor="white", $borderColor="green")
-AddSystemTag("Orchestrator", $bgColor="green", $fontColor="yellow", $borderColor="red")
+AddSystemTag("Orchestrator", $bgColor="green", $fontColor="yellow", $borderColor="yellow")
 
 Person(passenger, "Пассажир", "Заказывает, отслеживает и оплачивает поездки")
 Person(driver, "Водитель", "Принимает заказы, управляет поездками\nи получает выплаты") 
@@ -53,15 +53,13 @@ Rel(driver_service, notification_service, "Нотификации", $tags="newRe
 Rel(payments_service, notification_service, "Нотификации", $tags="newRelColor")
 
 ' Оркестрация
-Rel(booking_service, geo_service, "Запрашивает маршрут", $tags="newRelColor")
+Rel(booking_service, geo_service, "Ищет маршрут", $tags="newRelColor")
 Rel(booking_service, pricing_service, "Запрашивает цену", $tags="newRelColor")
-Rel(booking_service, payments_service, "Начисляет платежи", $tags="newRelColor")
-Rel(booking_service, driver_service, "Новые заказы", $tags="newRelColor")
-Rel(driver_service, booking_service, "Детали выполнения заказов", $tags="newRelColor")
-Rel(booking_service, payouts_service, "Исполненные заказы", $tags="newRelColor")
+Rel(booking_service, payments_service, "Инициирует платёж", $tags="newRelColor")
+Rel(booking_service, driver_service, "Назначает водителя", $tags="newRelColor")
 
 ' Взаимодействия вне оркестрации
-Rel(driver_service, geo_service, "Обновления маршрута", $tags="newRelColor")
+Rel(driver_service, payouts_service, "Исполнение заказа", $tags="newRelColor")
 
 ' Внешние взаимодействия
 Rel(payments_service, yandex_pay, "Обрабатывает платежи через", $tags="newRelColor")
