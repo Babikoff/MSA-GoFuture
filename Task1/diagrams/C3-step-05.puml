@@ -52,6 +52,8 @@ System_Boundary(go_future_sys, "GoFuture Microservices Platform", $tags="new") {
         }
     }
 
+    ContainerQueue(kafka, "Kafka", "Message Broker", "Асинхронная шина событий между микросервисами", $tags="new")
+
     Component(api_gateway, "API Gateway", "Kong / NGINX", "Маршрутизация, API versioning", $tags="new")
     Component(auth_server, "Auth Server", "Keycloak", "Единый центр аутентификации", $tags="new")
 
@@ -184,10 +186,14 @@ Rel(api_gateway, app_monolith, "Делегирует", "REST", $tags="newRelColo
 Rel(api_gateway, geo_service, "Делегирует", "REST", $tags="newRelColor")
 Rel(api_gateway, pricing_service, "Делегирует", "REST", $tags="newRelColor")
 
-' Монолит вызывает новые сервисы
-Rel(app_monolith, notification_service, "Нотификации", "REST", $tags="newRelColor")
-Rel(app_monolith, geo_service, "Запрашивает маршрут", "REST", $tags="newRelColor")
-Rel(app_monolith, pricing_service, "Запрашивает цену", "REST", $tags="newRelColor")
+' Монолит вызывает новые сервисы через kafka
+Rel(app_monolith, kafka, "Нотификации", "REST", $tags="newRelColor")
+Rel(app_monolith, kafka, "Запрашивает маршрут", "REST", $tags="newRelColor")
+Rel(app_monolith, kafka, "Запрашивает цену", "REST", $tags="newRelColor")
+
+Rel(kafka, notification_service, "Нотификации", "REST", $tags="newRelColor")
+Rel(kafka, geo_service, "Запрашивает маршрут", "REST", $tags="newRelColor")
+Rel(kafka, pricing_service, "Запрашивает цену", "REST", $tags="newRelColor")
 
 ' Задачи уведомлений переехали в сервис нотификаций
 Rel(mq_broker, notification_service, "▶ задачи уведомлений", "AMQP", $tags="newRelColor")

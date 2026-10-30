@@ -6,6 +6,8 @@
 ' ## Все взаимодействия между микросервисами - асинхронные через Kafka
 ' ###############################################################################
 
+AddComponentTag("Orchestrator", $bgColor="blue", $fontColor="yellow", $borderColor="black")
+
 System_Boundary(go_future_platform, "GoFuture Platform") {
 
     Component(api_gateway, "API Gateway", "Kong / NGINX", "Маршрутизация, API versioning")
@@ -13,10 +15,10 @@ System_Boundary(go_future_platform, "GoFuture Platform") {
 
     System_Boundary(microservice_platform, "GoFuture Microservices") {
 
-        Component(kafka, "Kafka", "Message Broker", "Асинхронная шина событий между микросервисами")
+        ContainerQueue(kafka, "Kafka", "Message Broker", "Асинхронная шина событий между микросервисами")
 
         System_Boundary(booking_service_sys, "Booking Service") {
-            Component(booking_service, "Booking Service", "Python", "Сервис заказов — управление бронированиями")
+            Component(booking_service, "Booking Service", "Python", "Сервис заказов — управление бронированиями", $tags="Orchestrator")
             ContainerDb(booking_service_db, "Booking Service DB", "PostgreSQL", "Данные бронирований")
         }
 
