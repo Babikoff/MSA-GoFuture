@@ -3,7 +3,7 @@
 
 ' Стилизация новых блоков и связей шага 5
 AddRelTag("newRelColor", $textColor="green", $lineColor="green", $lineStyle=SolidLine())
-AddBoundaryTag("new", $bgColor="green", $fontColor="white", $borderColor="green")
+AddBoundaryTag("new", $bgColor="white", $fontColor="green", $borderColor="green")
 AddComponentTag("new", $bgColor="green", $fontColor="white", $borderColor="green")
 AddContainerTag("new", $bgColor="green", $fontColor="white", $borderColor="green")
 
@@ -12,23 +12,6 @@ AddContainerTag("new", $bgColor="green", $fontColor="white", $borderColor="green
 ' ## NOTIFICATION, GEO, PRICING) - зелёным цветом выделены вынесенные из монолита 
 ' ## новые микросервисы
 ' ###############################################################################
-
-' ### СИСТЕМНЫЕ ГРАНИЦЫ (монолит) ###
-System_Boundary(monolith_boundary, "GoFuture Monolith") {
-    Container(app_monolith, "Django Application", "Python", "Единая кодовая база со всеми зависимостями")
-
-    System_Boundary(domain_components, "Доменные компоненты") {
-        Component(booking_domain, "Booking Domain", "Django App", "Управление бронированиями")
-        Component(driver_domain, "Driver Domain", "Django App", "Управление водителями")
-        Component(pricing_domain, "Pricing Domain", "Django App", "Ценообразование")
-        Component(payments_domain, "Payments Domain", "Django App", "Платежи от пассажиров")
-        Component(payouts_domain, "Payouts Domain", "Django App", "Выплаты водителям")
-        Component(notification_domain, "Notification Domain", "Django App", "Управление уведомлениями")
-        Component(geography_domain, "Geography Domain", "Django App", "Геопоиск и маршрутизация")
-        Component(analytics_domain, "Analytics Domain", "Django App", "Сбор аналитики")
-        Component(fraud_domain, "Fraud Domain", "Django App", "Обнаружение мошенничества")
-    }
-}
 
 ' ### CELERY WORKERS ###
 System_Boundary(celery_boundary, "Celery Workers") {
@@ -51,7 +34,23 @@ System_Boundary(queue_boundary, "Очереди") {
 }
 
 ' ### НОВЫЕ МИКРОСЕРВИСЫ ШАГА 5 (ЗЕЛЁНЫЕ) ###
-System_Boundary(go_future_sys, "GoFuture Microservices Platform") {
+System_Boundary(go_future_sys, "GoFuture Microservices Platform", $tags="new") {
+    ' ### СИСТЕМНЫЕ ГРАНИЦЫ (монолит) ###
+    System_Boundary(monolith_boundary, "GoFuture Monolith") {
+        Container(app_monolith, "Django Application", "Python", "Единая кодовая база со всеми зависимостями")
+
+        System_Boundary(domain_components, "Доменные компоненты") {
+            Component(booking_domain, "Booking Domain", "Django App", "Управление бронированиями")
+            Component(driver_domain, "Driver Domain", "Django App", "Управление водителями")
+            Component(pricing_domain, "Pricing Domain", "Django App", "Ценообразование")
+            Component(payments_domain, "Payments Domain", "Django App", "Платежи от пассажиров")
+            Component(payouts_domain, "Payouts Domain", "Django App", "Выплаты водителям")
+            Component(notification_domain, "Notification Domain", "Django App", "Управление уведомлениями")
+            Component(geography_domain, "Geography Domain", "Django App", "Геопоиск и маршрутизация")
+            Component(analytics_domain, "Analytics Domain", "Django App", "Сбор аналитики")
+            Component(fraud_domain, "Fraud Domain", "Django App", "Обнаружение мошенничества")
+        }
+    }
 
     Component(api_gateway, "API Gateway", "Kong / NGINX", "Маршрутизация, API versioning", $tags="new")
     Component(auth_server, "Auth Server", "Keycloak", "Единый центр аутентификации", $tags="new")
