@@ -53,6 +53,6 @@ Rel(geo_service, yandex_maps, "Запрашивает геоданные чер�
 Rel(notification_service, fcm, "Отправляет уведомления через", $tags="newRelColor")
 Rel(notification_service, apns, "Отправляет уведомления через", $tags="newRelColor")
 Rel(notification_service, huawei_push, "Отправляет уведомления через", $tags="newRelColor")
-Rel(payments_service, bank_api, "Инициирует выплаты через", $tags="newRelColor")
+Rel(go_future, bank_api, "Инициирует выплаты через")
 
 @enduml

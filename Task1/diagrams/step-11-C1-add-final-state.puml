@@ -3,6 +3,7 @@
 
 AddRelTag("newRelColor", $lineColor="green",$textColor="green", $lineStyle=SolidLine())
 AddSystemTag("new", $bgColor="green", $fontColor="white", $borderColor="green")
+AddSystemTag("Orchestrator", $bgColor="green", $fontColor="yellow", $borderColor="red")
 
 Person(passenger, "Пассажир", "Заказывает, отслеживает и оплачивает поездки")
 Person(driver, "Водитель", "Принимает заказы, управляет поездками\nи получает выплаты") 
@@ -12,12 +13,13 @@ Person(accountant, "Бухгалтер", "Контролирует выплат�
 System_Boundary(booking_service_sys, "GoFuture Microservices Platform") {
   System(api_gateway, "API Gateway", "Kong или NGINX (маршрутизация, API versioning)", $tags="new")
   System(auth_server, "Auth server", "Keycloak (единиый центр аутентификации)", $tags="new")
-  System(booking_service, "Booking service", "Сервис заказов", $tags="new")
+  System(booking_service, "Booking service", "Сервис заказов", $tags="Orchestrator")
   System(notification_service, "Notification Service", "Сервис нотификаций", $tags="new")
   System(geo_service, "Geography Service", "Гео сервис", $tags="new")
   System(pricing_service, "Pricing Service", "Сервис тарификации", $tags="new")
   System(driver_service, "Driver Service", "Сервис водителей", $tags="new")
-  System(payments_service, "Payments Service", "Сервис платежей", $tags="new")
+  System(payments_service, "Payments Service", "Сервис приёма платежей", $tags="new")
+  System(payouts_service, "Payouts Service", "Сервис выплат водителям", $tags="new")
   System(fraud_service, "Fraud Service", "Антифрод сервис (перехватывает нужные данные из Kafka)", $tags="new")
   System(analitics_service, "Analitics Service", "Сервис аналитики (перехватывает нужные данные из Kafka)", $tags="new")
 }
@@ -37,24 +39,36 @@ Rel(manager, api_gateway, "Использует для управления сч
 Rel(accountant, api_gateway, "Контролирует выплаты через")
 
 BiRel(api_gateway, auth_server, "Аутентификация", $tags="newRelColor")
-Rel(api_gateway, booking_service, "Делегирует (REST вызовы)", $tags="newRelColor")
+
+Rel(api_gateway, booking_service, "REST", $tags="newRelColor")
+Rel(api_gateway, geo_service, "REST", $tags="newRelColor")
+Rel(api_gateway, pricing_service, "REST", $tags="newRelColor")
+Rel(api_gateway, driver_service, "REST", $tags="newRelColor")
+Rel(api_gateway, payments_service, "REST", $tags="newRelColor")
+Rel(api_gateway, payouts_service, "REST", $tags="newRelColor")
+
+' Нотификации
 Rel(booking_service, notification_service, "Нотификации", $tags="newRelColor")
 Rel(driver_service, notification_service, "Нотификации", $tags="newRelColor")
 Rel(payments_service, notification_service, "Нотификации", $tags="newRelColor")
-Rel(api_gateway, geo_service, "Делегирует", $tags="newRelColor")
-Rel(booking_service, geo_service, "Запрашивает маршрут", $tags="newRelColor")
-Rel(driver_service, geo_service, "Запрашивает маршрут", $tags="newRelColor")
-Rel(api_gateway, pricing_service, "Делегирует", $tags="newRelColor")
-Rel(booking_service, pricing_service, "Запрашивает цену", $tags="newRelColor")
-Rel(api_gateway, driver_service, "Делегирует", $tags="newRelColor")
-Rel(api_gateway, payments_service, "Делегирует", $tags="newRelColor")
-Rel(payments_service, booking_service, "Платежи", $tags="newRelColor")
 
+' Оркестрация
+Rel(booking_service, geo_service, "Запрашивает маршрут", $tags="newRelColor")
+Rel(booking_service, pricing_service, "Запрашивает цену", $tags="newRelColor")
+Rel(booking_service, payments_service, "Начисляет платежи", $tags="newRelColor")
+Rel(booking_service, driver_service, "Новые заказы", $tags="newRelColor")
+Rel(driver_service, booking_service, "Детали выполнения заказов", $tags="newRelColor")
+Rel(booking_service, payouts_service, "Исполненные заказы", $tags="newRelColor")
+
+' Взаимодействия вне оркестрации
+Rel(driver_service, geo_service, "Обновления маршрута", $tags="newRelColor")
+
+' Внешние взаимодействия
 Rel(payments_service, yandex_pay, "Обрабатывает платежи через", $tags="newRelColor")
 Rel(geo_service, yandex_maps, "Запрашивает геоданные через", $tags="newRelColor")
 Rel(notification_service, fcm, "Отправляет уведомления через", $tags="newRelColor")
 Rel(notification_service, apns, "Отправляет уведомления через", $tags="newRelColor")
 Rel(notification_service, huawei_push, "Отправляет уведомления через", $tags="newRelColor")
-Rel(payments_service, bank_api, "Инициирует выплаты через", $tags="newRelColor")
+Rel(payouts_service, bank_api, "Инициирует выплаты через", $tags="newRelColor")
 
 @enduml
