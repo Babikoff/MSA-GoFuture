@@ -15,7 +15,7 @@ Rel(driver, global_dns, "Использует для работы и получ�
 Rel(manager, global_dns, "Использует для управления счетами", $tags="new")
 Rel(accountant, global_dns, "Контролирует выплаты через", $tags="new")
 
-System_Boundary(booking_service_sys_sea, "GoFuture Microservices Platform - LATAM") {
+System_Boundary(booking_service_sys_sea, "GoFuture Microservices Platform - SEA") {
   System(api_gateway_sea, "API Gateway", "Kong или NGINX (маршрутизация, API versioning)")
   System(auth_server_sea, "Auth server", "Keycloak (единиый центр аутентификации)")
   System(user_info_service_sea, "User info service", "Сервис пользователей", $tags="new")
@@ -158,5 +158,14 @@ Rel(notification_service, apns, "Отправляет уведомления ч�
 Rel(notification_service, huawei_push, "Отправляет уведомления через")
 Rel(payouts_service, bank_api, "Инициирует выплаты через")
 
+
+' Межрегиональное взаимодействие (SSO / Roaming пользователей)
+Rel(auth_server, auth_server_latam, "Синхронизация учетных данных / OIDC Brokering", "gRPC / mTLS", $tags="new")
+Rel(auth_server_latam, auth_server_sea, "Синхронизация учетных данных / OIDC Brokering", "gRPC / mTLS", $tags="new")
+Rel(auth_server, auth_server_sea, "Синхронизация учетных данных / OIDC Brokering", "gRPC / mTLS", $tags="new")
+
+Rel(user_info_service, user_info_service_latam, "Кросс-региональная репликация профилей", "Kafka MirrorMaker / REST", $tags="new")
+Rel(user_info_service_latam, user_info_service_sea, "Кросс-региональная репликация профилей", "Kafka MirrorMaker / REST", $tags="new")
+Rel(user_info_service, user_info_service_sea, "Кросс-региональная репликация профилей", "Kafka MirrorMaker / REST", $tags="new")
 
 @enduml
