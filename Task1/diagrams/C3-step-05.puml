@@ -2,7 +2,7 @@
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
 
 ' Стилизация новых блоков и связей шага 5
-AddRelTag("newRelColor", $textColor="green", $lineColor="green", $lineStyle=SolidLine())
+AddRelTag("new", $textColor="green", $lineColor="green", $lineStyle=SolidLine())
 AddBoundaryTag("new", $bgColor="white", $fontColor="green", $borderColor="green")
 AddComponentTag("new", $bgColor="green", $fontColor="white", $borderColor="green")
 AddContainerTag("new", $bgColor="green", $fontColor="white", $borderColor="green")
@@ -174,7 +174,7 @@ Rel(analytics_domain, db_main, "▶ все таблицы", "прямые SQL")
 Rel(fraud_domain, db_main, "▶ payments, bookings", "прямые SQL")
 
 ' ### ВРЕМЕННЫЕ СИНХРОНИЗАЦИИ (НА ПЕРИОД МИГРАЦИИ) ###
-BiRel(pricing_service_db, db_main, "Логическая репликация обновлений данных", "SQL", $tags="newRelColor")
+BiRel(pricing_service_db, db_main, "Логическая репликация обновлений данных", "SQL", $tags="new")
 
 ' ### ВНЕШНИЕ ИНТЕГРАЦИИ (оставшиеся в монолите) ###
 Rel(payments_domain, yandex_pay, "▶ платежи", "Yandex Pay API")
@@ -184,43 +184,45 @@ Rel(payments_domain, yandex_pay, "▶ платежи", "Yandex Pay API")
 ' ###############################################################################
 
 ' Точки входа
-BiRel(api_gateway, auth_server, "Аутентификация", $tags="newRelColor")
-Rel(api_gateway, app_monolith, "Делегирует", "REST", $tags="newRelColor")
-Rel(api_gateway, geo_service, "Делегирует", "REST", $tags="newRelColor")
-Rel(api_gateway, pricing_service, "Делегирует", "REST", $tags="newRelColor")
+BiRel(api_gateway, auth_server, "Аутентификация", $tags="new")
+Rel(api_gateway, app_monolith, "Делегирует", "REST", $tags="new")
+Rel(api_gateway, geo_service, "Делегирует", "REST", $tags="new")
+Rel(api_gateway, pricing_service, "Делегирует", "REST", $tags="new")
 
 ' Монолит вызывает новые сервисы через kafka
-Rel(app_monolith, kafka, "Нотификации", "REST", $tags="newRelColor")
-Rel(app_monolith, kafka, "Запрашивает маршрут", "REST", $tags="newRelColor")
-Rel(app_monolith, kafka, "Запрашивает цену", "REST", $tags="newRelColor")
+Rel(app_monolith, kafka, "Нотификации", "REST", $tags="new")
+Rel(app_monolith, kafka, "Запрашивает маршрут", "REST", $tags="new")
+Rel(app_monolith, kafka, "Запрашивает цену", "REST", $tags="new")
 
-Rel(kafka, notification_service, "Нотификации", "REST", $tags="newRelColor")
-Rel(kafka, geo_service, "Запрашивает маршрут", "REST", $tags="newRelColor")
-Rel(kafka, pricing_service, "Запрашивает цену", "REST", $tags="newRelColor")
+Rel(kafka, notification_service, "Нотификации", "REST", $tags="new")
+Rel(kafka, geo_service, "Запрашивает маршрут", "REST", $tags="new")
+Rel(kafka, pricing_service, "Запрашивает цену", "REST", $tags="new")
 
 ' Задачи уведомлений переехали в сервис нотификаций
-Rel(mq_broker, notification_service, "▶ задачи уведомлений", "AMQP", $tags="newRelColor")
+Rel(mq_broker, notification_service, "▶ задачи уведомлений", "AMQP", $tags="new")
 
 ' Внешние интеграции новых сервисов
-Rel(notification_service, fcm, "▶ уведомления Android", "REST API", $tags="newRelColor")
-Rel(notification_service, apns, "▶ уведомления iOS", "REST API", $tags="newRelColor")
-Rel(notification_service, huawei_push, "▶ уведомления Huawei", "REST API", $tags="newRelColor")
-Rel(geo_service, yandex_maps, "▶ геоданные", "Yandex Maps API", $tags="newRelColor")
+Rel(notification_service, fcm, "▶ уведомления Android", "REST API", $tags="new")
+Rel(notification_service, apns, "▶ уведомления iOS", "REST API", $tags="new")
+Rel(notification_service, huawei_push, "▶ уведомления Huawei", "REST API", $tags="new")
+Rel(geo_service, yandex_maps, "▶ геоданные", "Yandex Maps API", $tags="new")
 
 ' Собственные базы данных и кеши сервисов
-Rel(pricing_service, pricing_service_db, "▶ pricing_rules", "прямые SQL", $tags="newRelColor")
-Rel(pricing_service, db_pricing_cache, "▶ кеш ценовых правил", "Redis", $tags="newRelColor")
-Rel(geo_service, geo_service_db, "▶ drivers, zones", "прямые SQL", $tags="newRelColor")
-Rel(geo_service, db_geo_cache, "▶ кеш геоданных", "Redis", $tags="newRelColor")
-Rel(geo_service, db_search, "▶ поиск водителей", "Elasticsearch API", $tags="newRelColor")
-Rel(notification_service, notification_service_db, "▶ данные уведомлений", "ORM", $tags="newRelColor")
-Rel(notification_service, db_notification_service_cache, "▶ кеш устройств", "Redis", $tags="newRelColor")
+Rel(pricing_service, pricing_service_db, "▶ pricing_rules", "прямые SQL", $tags="new")
+Rel(pricing_service, db_pricing_cache, "▶ кеш ценовых правил", "Redis", $tags="new")
+Rel(geo_service, geo_service_db, "▶ drivers, zones", "прямые SQL", $tags="new")
+Rel(geo_service, db_geo_cache, "▶ кеш геоданных", "Redis", $tags="new")
+Rel(geo_service, db_search, "▶ поиск водителей", "Elasticsearch API", $tags="new")
+Rel(notification_service, notification_service_db, "▶ данные уведомлений", "ORM", $tags="new")
+Rel(notification_service, db_notification_service_cache, "▶ кеш устройств", "Redis", $tags="new")
 
 ' Мониторинг и логи новых сервисов
-Rel(notification_service, monitoring, "▶ метрики уведомлений", "Prometheus", $tags="newRelColor")
-Rel(notification_service, loki, "▶ логи уведомлений", "Loki Logs", $tags="newRelColor")
-Rel(pricing_service_db, monitoring, "▶ метрики БД", "PostgreSQL Exporter", $tags="newRelColor")
-Rel(geo_service_db, monitoring, "▶ метрики БД", "PostgreSQL Exporter", $tags="newRelColor")
-Rel(notification_service_db, monitoring, "▶ метрики БД", "PostgreSQL Exporter", $tags="newRelColor")
+Rel(notification_service, monitoring, "▶ метрики уведомлений", "Prometheus", $tags="new")
+Rel(notification_service, loki, "▶ логи уведомлений", "Loki Logs", $tags="new")
+Rel(pricing_service_db, monitoring, "▶ метрики БД", "PostgreSQL Exporter", $tags="new")
+Rel(geo_service_db, monitoring, "▶ метрики БД", "PostgreSQL Exporter", $tags="new")
+Rel(notification_service_db, monitoring, "▶ метрики БД", "PostgreSQL Exporter", $tags="new")
+
+SHOW_LEGEND()
 
 @enduml
