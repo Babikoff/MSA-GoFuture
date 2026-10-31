@@ -28,40 +28,58 @@
 
 ## 3. Решение
 
-### 3.1 Модели доменных событий ###
-
-| Код события | Название | Описание | Данные |
-|---|---|---|---|
-| **** |  |  |  |
-
-
-### 3.2 Схема топиков в Kafka ###
-
-| Код топика | Описание данных| Producer | Consumer |
-|---|---|---|---|
-| **booking-saga.get_driver** | Запрос водителя на заказ | booking_service | driver_service |
-| **booking-saga.get_drivers_resp** | Данные водителя водителя для заказа/нет доступных | driver_service  | booking_service|
-| **booking-saga.get_price** | Запрос цены | booking_service | pricing_service |
-| **booking-saga.get_price_resp** | Цена заказа/ошибка расчёты цены | pricing_service | booking_service |
-| **booking-saga.start_payment** | Запрос оплаты поездки | booking_service | payments_service |
-| **booking-saga.start_payment_resp** | Оплата поездки/Ошибка оплаты | payments_service | booking_service |
-| **booking-saga.request_route** | Запрос маршрута | booking_service | geo_service |
-| **booking-saga.order_completed** | Исполнение заказа | driver_service | payouts_service |
-| **booking-saga.check_fraud** | Автоматически проверяет на мошенничество крупные заказы | booking_service | fraud_service |
-| **booking-service.notifications** | Уведомления | booking_service | notification_service |
-| **booking-service.notifications** | Уведомления | driver_service | notification_service |
-| **booking-service.notifications** | Уведомления | payments_service | notification_service |
-| **driver-payment-saga.get_trips** | Получить поездки | driver_service | booking_service |
-| **driver-payment-saga.pricing_service** | Получить цены поездок | driver_service | pricing_service |
-| **analitics** | Метрики геопоиска | analitics_service | analitics_service |
-
-### 3.3 Выбор типа SAGA и реестр событий SAGA ###
+### 3.1 Выбор типа SAGA ###
 
 Для реализации двух обнаруженных бизнес-процессов: "заказ такси" и "выплаты водителю" предлагается использовать **Parallel Saga**. Parallel Saga позволяет управлять сложными бизнес-процессами, отностильно легко изменять количество участвующих в них микросервисов и даёт высокую производительность.
 
-### 3.4 Выбор механизмов обеспечения надёжной доставки данных между сервисами ###
+### 3.2 Выбор механизмов обеспечения надёжной доставки данных между сервисами ###
 
 Для доставки данных между сервисами выбран брокер сообщений **Kafka** в котором реализованны современные механизмы отказоустойчивости и повышения производительности.
+
+### 3.3 Проектирование шагов Saga ###
+
+|**Транзакция**|**Описание**|**Тип**|**Компенсация**|
+| :-: | :- | :- | :- |
+| CREATE_ORDER | Старт workflow заказа | Необратимая | - |
+| GET_DRIVER | Поиск водителя | Повторяемая | - |
+| HOLD_FUNDS | Резервирование средств | Компенсируемая | RELEASE_FUNDS |
+| RELEASE_FUNDS | Отмена резервирования средств | Необратимая | - |
+| START_TRIP | Начало поездки | Необратимая | - |
+| FINISH_TRIP | Завершение поездки | Необратимая | - |
+| CANCEL_ORDER | Отмена заказа | Необратимая | - |
+| CANCEL_HOLD | Отмена резервирования средств | Необратимая | - |
+| COMPLETE_ORDER | Фиксация итогового состояния процесса | Необратимая | - |
+
+# 3.4 Проектирование переходов Saga для заказа такси #
+
+|**Исходное состояние**|**Переходное состояние**|**Событие**|
+| :-: | :- | :- |
+| - | Получен заказ | ORDER_CREATED |
+
+### 3.2 Схема топиков в Kafka ###
+
+Для наименования топиков в Kafka предлагается следующий популярный формат `{domain}.{aggregate}.{event}[.v{version}]` *(версия не обязательна)*;
+
+| Код топика | Описание данных| Producer | Consumer |
+|---|---|---|---|
+| **driver.driver.get_driver** | Запрос водителя на заказ | booking_service | driver_service |
+| **driver.driver.get_drivers_resp** | Данные водителя водителя для заказа/нет доступных | driver_service  | booking_service|
+| **pricing.pricing.get_price** | Запрос цены | booking_service | pricing_service |
+| **pricing.pricing.get_price_resp** | Цена заказа/ошибка расчёты цены | pricing_service | booking_service |
+| **payments.payment.start_payment** | Запрос оплаты поездки | booking_service | payments_service |
+| **payments.payment.start_payment_resp** | Оплата поездки/Ошибка оплаты | payments_service | booking_service |
+| **geo.geo.request_route** | Запрос маршрута | geo_service | booking_service |
+| **geo.geo.request_route_resp** | Маршрут/ошибка | booking_service | geo_service |
+| **booking.booking.order_completed** | Исполнение заказа | driver_service | payouts_service |
+| **fraud.fraud.check_fraud** | Автоматически проверяет на мошенничество крупные заказы | booking_service | fraud_service |
+| **booking.booking.notifications** | Уведомления | booking_service | notification_service |
+| **driver.driver.notifications** | Уведомления | driver_service | notification_service |
+| **payment.payment.notifications** | Уведомления | payments_service | notification_service |
+| **booking.booking.get_trips** | Получить поездки | driver_service | booking_service |
+| **pricing.pricing.get_prices** | Получить цены поездок | driver_service | pricing_service |
+| **analitics.geo** | Метрики геопоиска | analitics_service | analitics_service |
+
+Для разделения топиков Kafka по регионам предлагается использовать составной ключ партиционирования в формате `{region}:{country}:{aggregate_id}`.
 
 ### 3.5.1 Выбор подходов к мониторингу ###
 
