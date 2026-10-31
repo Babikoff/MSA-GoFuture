@@ -1,0 +1,238 @@
+@startuml Container_Diagram_GoFuture_Final_State
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' ###############################################################################
+' ## C2 КОНТЕЙНЕРНАЯ ДИАГРАММА (ЦЕЛЕВОЕ СОСТОЯНИЕ)
+' ## Все взаимодействия между микросервисами - асинхронные через Kafka
+' ###############################################################################
+
+AddContainerTag("Orchestrator", $bgColor="blue", $fontColor="yellow", $borderColor="black")
+
+System_Boundary(go_future_platform, "GoFuture Platform") {
+
+    Container(api_gateway, "API Gateway", "Kong / NGINX", "Маршрутизация, API versioning")
+    Container(auth_server, "Auth Server", "Keycloak", "Единый центр аутентификации")
+
+    System_Boundary(microservice_platform, "GoFuture Microservices") {
+
+        ContainerQueue(kafka, "Kafka", "Message Broker", "Асинхронная шина событий между микросервисами")
+
+        System_Boundary(booking_service_sys, "Booking Service") {
+            Container(booking_service, "Booking Service", "Python", "Сервис заказов — управление", $tags="Orchestrator")
+            ContainerDb(booking_service_db, "Booking Service DB", "PostgreSQL", "Данные заказов")
+        }
+
+        System_Boundary(driver_service_sys, "Driver Service") {
+            Container(driver_service, "Driver Service", "Python", "Сервис водителей — управление водителями")
+            ContainerDb(driver_service_db, "Driver Service DB", "PostgreSQL", "Данные водителей")
+        }
+
+        System_Boundary(pricing_service_sys, "Pricing Service") {
+            Container(pricing_service, "Pricing Service", "Python", "Сервис тарификации — ценообразование")
+            ContainerDb(pricing_service_db, "Pricing Service DB", "PostgreSQL", "Ценовые правила и тарифы")
+            ContainerDb(db_pricing_cache, "In-memory кеш", "Redis", "Кеширование данных")
+        }
+
+        System_Boundary(payments_service_sys, "Payments Service") {
+            Container(payments_service, "Payments Service", "Python", "Сервис приёма платежей — платежи от пассажиров")
+            ContainerDb(payments_service_db, "Payments Service DB", "PostgreSQL", "Платежи")
+        }
+
+        System_Boundary(payouts_service_sys, "Payouts Service") {
+            Container(payouts_service, "Payouts Service", "Python", "Сервис выплат водителям")
+            ContainerDb(payouts_service_db, "Payouts Service DB", "PostgreSQL", "Выплаты и балансы")
+        }
+
+        System_Boundary(notification_service_sys, "Notification Service") {
+            Container(notification_service, "Notification Service", "Python", "Сервис нотификаций — управление уведомлениями")
+            ContainerDb(notification_service_db, "Notification Service DB", "PostgreSQL", "Данные уведомлений и устройств")
+            ContainerDb(db_notification_service_cache, "In-memory кеш", "Redis", "Кеширование данных")
+        }
+
+        System_Boundary(geo_service_sys, "Geography Service") {
+            Container(geo_service, "Geography Service", "Python", "Гео сервис — геопоиск и маршрутизация")
+            ContainerDb(geo_service_db, "Geography Service DB", "PostgreSQL", "Водители и зоны")
+            ContainerDb(db_geo_cache, "In-memory кеш", "Redis", "Кеширование данных")            
+            ContainerDb(db_search, "Поисковый индекс", "Elasticsearch", "Геопоиск водителей")
+        }
+
+        System_Boundary(fraud_service_sys, "Fraud Service") {
+            Container(fraud_service, "Fraud Service", "Python", "Антифрод сервис — обнаружение мошенничества (перехватывает данные из Kafka)")
+            ContainerDb(fraud_service_db, "Fraud Service DB", "PostgreSQL", "Данные для проверок (payments, bookings)")
+        }
+
+        System_Boundary(analitics_service_sys, "Analytics Service") {
+            Container(analitics_service, "Analytics Service", "Python", "Сервис аналитики — сбор аналитики (перехватывает данные из Kafka)")
+            Container(analytics_engine, "Analytics Engine", "Spark/Flink", "Обработка данных")
+            Container(analytics_db, "Analytics DB", "ClickHouse", "Хранение аналитики")
+            Container(datalens, "DataLens", "BI Tool", "Визуализация отчётов")
+        }
+    }
+}
+
+
+' ### МОНИТОРИНГ ###
+System_Boundary(monitoring_boundary, "Мониторинг") {
+    Container(monitoring, "Prometheus", "Monitoring", "Сбор метрик")
+    Container(grafana, "Grafana", "Dashboard", "Визуализация метрик")
+    Container(loki, "Loki", "Log Aggregation", "Сбор логов")
+    Container(alert_manager, "Alertmanager", "Alert System", "Управление алертами")
+}
+
+' ### CI/CD ###
+System_Boundary(cicd_boundary, "CI/CD") {
+    Container(jenkins, "Jenkins", "CI/CD", "Сборка и деплой")
+    Container(artifact_repo, "Docker Registry", "Artifact Storage", "Хранение образов")
+}
+
+' ### ВНЕШНИЕ СИСТЕМЫ ###
+System_Ext(yandex_pay, "Яндекс Пэй", "Платёжный шлюз")
+System_Ext(yandex_maps, "Яндекс Карты", "Картографический сервис")
+System_Ext(fcm, "FCM", "Push-сервис Google")
+System_Ext(apns, "APNs", "Push-сервис Apple")
+System_Ext(huawei_push, "Huawei Push Kit", "Push-сервис Huawei")
+System_Ext(bank_api, "API Банка", "Банковские выплаты")
+' ### ТОЧКИ ВХОДА (C1 step-11) ###
+BiRel(api_gateway, auth_server, "Аутентификация", "OIDC / JWT")
+
+Rel(api_gateway, booking_service, "REST", "REST API")
+Rel(api_gateway, geo_service, "REST", "REST API")
+Rel(api_gateway, pricing_service, "REST", "REST API")
+Rel(api_gateway, driver_service, "REST", "REST API")
+Rel(api_gateway, payments_service, "REST", "REST API")
+Rel(api_gateway, payouts_service, "REST", "REST API")
+
+' ###############################################################################
+' ## ВЗАИМОДЕЙСТВИЯ МЕЖДУ МИКРОСЕРВИСАМИ - ВСЕ ЧЕРЕЗ KAFKA
+' ###############################################################################
+
+' --- Оркестрация заказов: Booking -> другие сервисы ---
+Rel(booking_service, kafka, "▶ назначает водителя", "Kafka")
+Rel(kafka, driver_service, "▶ назначает водителя", "Kafka")
+
+Rel(booking_service, kafka, "▶ запрашивает цену", "Kafka")
+Rel(kafka, pricing_service, "▶ запрашивает цену", "Kafka")
+
+Rel(booking_service, kafka, "▶ инициирует платёж", "Kafka")
+Rel(kafka, payments_service, "▶ инициирует платёж", "Kafka")
+
+Rel(booking_service, kafka, "▶ ищет маршрут", "Kafka")
+Rel(kafka, geo_service, "▶ ищет маршрут", "Kafka")
+
+Rel(booking_service, kafka, "▶ проверяет на мошенничество", "Kafka")
+Rel(kafka, fraud_service, "▶ проверяет на мошенничество", "Kafka")
+
+Rel(booking_service, kafka, "▶ отправляет уведомления", "Kafka")
+Rel(kafka, notification_service, "▶ отправляет уведомления", "Kafka")
+
+' --- Взаимодействия вне оркестрации ---
+Rel(driver_service, kafka, "▶ расчет заработка", "Kafka")
+Rel(kafka, pricing_service, "▶ расчет заработка", "Kafka")
+
+Rel(payments_service, kafka, "▶ проверка транзакций", "Kafka")
+Rel(kafka, fraud_service, "▶ проверка транзакций", "Kafka")
+
+Rel(payouts_service, kafka, "▶ данные водителя", "Kafka")
+Rel(kafka, driver_service, "▶ данные водителя", "Kafka")
+
+Rel(geo_service, kafka, "▶ метрики геопоиска", "Kafka")
+Rel(kafka, analitics_service, "▶ метрики геопоиска", "Kafka")
+
+' --- Нотификации: driver -> notification, payments -> notification ---
+Rel(driver_service, kafka, "Нотификации", "Kafka")
+Rel(kafka, notification_service, "Нотификации", "Kafka")
+
+Rel(payments_service, kafka, "Нотификации", "Kafka")
+Rel(kafka, notification_service, "Нотификации", "Kafka")
+
+' --- Исполнение заказа: driver -> payouts ---
+Rel(driver_service, kafka, "Исполнение заказа", "Kafka")
+Rel(kafka, payouts_service, "Исполнение заказа", "Kafka")
+
+' --- Асинхронные события (Kafka заменила RabbitMQ) ---
+Rel(booking_service, kafka, "▶ уведомления и аналитика", "Kafka")
+Rel(payouts_service, kafka, "▶ выплаты", "Kafka")
+Rel(payments_service, kafka, "▶ отчёты", "Kafka")
+Rel(analitics_service, kafka, "▶ события аналитики", "Kafka")
+
+' --- Чтение событий сервисами-потребителями (ранее Celery Tasks) ---
+Rel(kafka, notification_service, "▶ задачи уведомлений", "Kafka")
+Rel(kafka, payouts_service, "▶ задачи выплат", "Kafka")
+Rel(kafka, analitics_service, "▶ задачи аналитики", "Kafka")
+
+' ### ПРЯМЫЕ ОБРАЩЕНИЯ К СВОИМ БАЗАМ ДАННЫХ ###
+Rel(booking_service, booking_service_db, "▶ bookings, drivers", "прямые SQL")
+Rel(driver_service, driver_service_db, "▶ drivers, payouts", "прямые SQL")
+Rel(pricing_service, pricing_service_db, "▶ pricing_rules", "прямые SQL")
+Rel(payments_service, payments_service_db, "▶ payments", "прямые SQL")
+Rel(payouts_service, payouts_service_db, "▶ payouts", "прямые SQL")
+Rel(geo_service, geo_service_db, "▶ drivers, zones", "прямые SQL")
+Rel(fraud_service, fraud_service_db, "▶ payments, bookings", "прямые SQL")
+Rel(notification_service, notification_service_db, "▶ данные уведомлений", "ORM")
+
+' ### КЕШИРОВАНИЕ ###
+Rel(pricing_service, db_pricing_cache, "▶ кеш ценовых правил", "Redis")
+Rel(notification_service, db_notification_service_cache, "▶ кеш устройств", "Redis")
+Rel(geo_service, db_geo_cache, "▶ кеш геоданных", "Redis")
+
+' ### ГЕОПОИСК ###
+Rel(geo_service, db_search, "▶ поиск водителей", "Elasticsearch API")
+
+' ### ВНЕШНИЕ ИНТЕГРАЦИИ ###
+Rel(geo_service, yandex_maps, "▶ геоданные", "Yandex Maps API")
+Rel(payments_service, yandex_pay, "▶ платежи", "Yandex Pay API")
+Rel(notification_service, fcm, "▶ уведомления Android", "REST API")
+Rel(notification_service, apns, "▶ уведомления iOS", "REST API")
+Rel(notification_service, huawei_push, "▶ уведомления Huawei", "REST API")
+Rel(payouts_service, bank_api, "▶ банковские выплаты", "REST API")
+
+' ### МОНИТОРИНГ - МЕТРИКИ ###
+Rel(booking_service, monitoring, "▶ метрики бронирований", "Prometheus")
+Rel(payments_service, monitoring, "▶ метрики платежей", "Prometheus")
+Rel(notification_service, monitoring, "▶ метрики уведомлений", "Prometheus")
+Rel(payouts_service, monitoring, "▶ метрики выплат", "Prometheus")
+
+Rel(booking_service_db, monitoring, "▶ метрики БД", "PostgreSQL Exporter")
+Rel(driver_service_db, monitoring, "▶ метрики БД", "PostgreSQL Exporter")
+Rel(pricing_service_db, monitoring, "▶ метрики БД", "PostgreSQL Exporter")
+Rel(payments_service_db, monitoring, "▶ метрики БД", "PostgreSQL Exporter")
+Rel(payouts_service_db, monitoring, "▶ метрики БД", "PostgreSQL Exporter")
+Rel(notification_service_db, monitoring, "▶ метрики БД", "PostgreSQL Exporter")
+Rel(geo_service_db, monitoring, "▶ метрики БД", "PostgreSQL Exporter")
+Rel(fraud_service_db, monitoring, "▶ метрики БД", "PostgreSQL Exporter")
+
+Rel(db_geo_cache, monitoring, "▶ метрики кэша", "")
+Rel(db_pricing_cache, monitoring, "▶ метрики кэша", "")
+Rel(db_notification_service_cache, monitoring, "▶ метрики кэша", "")
+
+Rel(kafka, monitoring, "▶ метрики очередей", "Kafka Exporter")
+
+Rel(monitoring, grafana, "▶ данные для дашбордов", "PromQL")
+Rel(grafana, monitoring, "▶ запросы метрик", "PromQL")
+Rel(monitoring, alert_manager, "▶ алерты", "Alert Rules")
+
+' ### МОНИТОРИНГ - ЛОГИ ###
+Rel(booking_service, loki, "▶ логи бронирований", "Loki Logs")
+Rel(payments_service, loki, "▶ логи платежей", "Loki Logs")
+Rel(notification_service, loki, "▶ логи уведомлений", "Loki Logs")
+Rel(payouts_service, loki, "▶ логи выплат", "Loki Logs")
+Rel(api_gateway, loki, "▶ логи приложения", "Loki Logs")
+Rel(auth_server, loki, "▶ логи приложения", "Loki Logs")
+
+' ### АНАЛИТИКА ###
+Rel(analitics_service, analytics_engine, "▶ отправка событий", "Kafka")
+Rel(analitics_service, analytics_engine, "▶ обработка данных", "Spark Jobs")
+Rel(analytics_engine, analytics_db, "▶ запись данных", "ETL")
+Rel(analytics_db, datalens, "▶ визуализация отчётов", "SQL")
+
+' ### CI/CD ###
+Rel(jenkins, artifact_repo, "▶ управление образами", "Docker API")
+
+Rel(jenkins, api_gateway, "▶ деплой приложения", "Docker Deploy")
+Rel(jenkins, auth_server, "▶ деплой приложения", "Docker Deploy")
+
+Rel(jenkins, microservice_platform, "▶ деплой микросервисов", "Docker Deploy")
+
+Rel(artifact_repo, microservice_platform, "▶ хранение образов", "Docker Registry")
+
+@enduml
