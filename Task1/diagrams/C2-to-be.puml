@@ -6,7 +6,7 @@
 ' ## Все взаимодействия между микросервисами - асинхронные через Kafka
 ' ###############################################################################
 
-AddContainerTag("Orchestrator", $bgColor="blue", $fontColor="yellow", $borderColor="black")
+AddContainerTag("Orchestrator", $fontColor="yellow", $borderColor="black")
 
 System_Boundary(go_future_platform, "GoFuture Platform") {
 
@@ -17,56 +17,64 @@ System_Boundary(go_future_platform, "GoFuture Platform") {
 
         ContainerQueue(kafka, "Kafka", "Message Broker", "Асинхронная шина событий между микросервисами")
 
-        System_Boundary(booking_service_sys, "Booking Service") {
-            Container(booking_service, "Booking Service", "Python", "Сервис заказов — управление", $tags="Orchestrator")
-            ContainerDb(booking_service_db, "Booking Service DB", "PostgreSQL", "Данные заказов")
-        }
+        Container(booking_service_sys, "Booking Service", "Python", "Сервис заказов — управление", $tags="Orchestrator")
+        ' System_Boundary(booking_service_sys, "Booking Service") {
+        '     ContainerDb(booking_service_db, "Booking Service DB", "PostgreSQL", "Данные заказов")
+        ' }
 
-        System_Boundary(driver_service_sys, "Driver Service") {
-            Container(driver_service, "Driver Service", "Python", "Сервис водителей — управление водителями")
-            ContainerDb(driver_service_db, "Driver Service DB", "PostgreSQL", "Данные водителей")
-        }
+        Container(driver_service_sys, "Driver Service", "Python", "Сервис водителей — управление водителями")
+        ' System_Boundary(driver_service_sys, "Driver Service") {
+        '     Container(driver_service_sys, "Driver Service", "Python", "Сервис водителей — управление водителями")
+        '     ContainerDb(driver_service_db, "Driver Service DB", "PostgreSQL", "Данные водителей")
+        ' }
 
-        System_Boundary(pricing_service_sys, "Pricing Service") {
-            Container(pricing_service, "Pricing Service", "Python", "Сервис тарификации — ценообразование")
-            ContainerDb(pricing_service_db, "Pricing Service DB", "PostgreSQL", "Ценовые правила и тарифы")
-            ContainerDb(db_pricing_cache, "In-memory кеш", "Redis", "Кеширование данных")
-        }
+        Container(pricing_service_sys, "Pricing Service", "Python", "Сервис тарификации — ценообразование")
+        ' System_Boundary(pricing_service_sys, "Pricing Service") {
+        '     Container(pricing_service_sys, "Pricing Service", "Python", "Сервис тарификации — ценообразование")
+        '     ContainerDb(pricing_service_db, "Pricing Service DB", "PostgreSQL", "Ценовые правила и тарифы")
+        '     ContainerDb(db_pricing_cache, "In-memory кеш", "Redis", "Кеширование данных")
+        ' }
 
-        System_Boundary(payments_service_sys, "Payments Service") {
-            Container(payments_service, "Payments Service", "Python", "Сервис приёма платежей — платежи от пассажиров")
-            ContainerDb(payments_service_db, "Payments Service DB", "PostgreSQL", "Платежи")
-        }
+        Container(payments_service_sys, "Payments Service", "Python", "Сервис приёма платежей — платежи от пассажиров")
+        ' System_Boundary(payments_service_sys, "Payments Service") {
+        '     Container(payments_service_sys, "Payments Service", "Python", "Сервис приёма платежей — платежи от пассажиров")
+        '     ContainerDb(payments_service_db, "Payments Service DB", "PostgreSQL", "Платежи")
+        ' }
 
-        System_Boundary(payouts_service_sys, "Payouts Service") {
-            Container(payouts_service, "Payouts Service", "Python", "Сервис выплат водителям")
-            ContainerDb(payouts_service_db, "Payouts Service DB", "PostgreSQL", "Выплаты и балансы")
-        }
+        Container(payouts_service_sys, "Payouts Service", "Python", "Сервис выплат водителям")
+        ' System_Boundary(payouts_service_sys, "Payouts Service") {
+        '     Container(payouts_service_sys, "Payouts Service", "Python", "Сервис выплат водителям")
+        '     ContainerDb(payouts_service_db, "Payouts Service DB", "PostgreSQL", "Выплаты и балансы")
+        ' }
 
-        System_Boundary(notification_service_sys, "Notification Service") {
-            Container(notification_service, "Notification Service", "Python", "Сервис нотификаций — управление уведомлениями")
-            ContainerDb(notification_service_db, "Notification Service DB", "PostgreSQL", "Данные уведомлений и устройств")
-            ContainerDb(db_notification_service_cache, "In-memory кеш", "Redis", "Кеширование данных")
-        }
+        Container(notification_service_sys, "Notification Service", "Python", "Сервис нотификаций — управление уведомлениями")
+        ' System_Boundary(notification_service_sys, "Notification Service") {
+        '     Container(notification_service_sys, "Notification Service", "Python", "Сервис нотификаций — управление уведомлениями")
+        '     ContainerDb(notification_service_db, "Notification Service DB", "PostgreSQL", "Данные уведомлений и устройств")
+        '     ContainerDb(db_notification_service_cache, "In-memory кеш", "Redis", "Кеширование данных")
+        ' }
 
-        System_Boundary(geo_service_sys, "Geography Service") {
-            Container(geo_service, "Geography Service", "Python", "Гео сервис — геопоиск и маршрутизация")
-            ContainerDb(geo_service_db, "Geography Service DB", "PostgreSQL", "Водители и зоны")
-            ContainerDb(db_geo_cache, "In-memory кеш", "Redis", "Кеширование данных")            
-            ContainerDb(db_search, "Поисковый индекс", "Elasticsearch", "Геопоиск водителей")
-        }
+        Container(geo_service_sys, "Geography Service", "Python", "Гео сервис — геопоиск и маршрутизация")
+        ' System_Boundary(geo_service_sys, "Geography Service") {
+        '     Container(geo_service_sys, "Geography Service", "Python", "Гео сервис — геопоиск и маршрутизация")
+        '     ContainerDb(geo_service_db, "Geography Service DB", "PostgreSQL", "Водители и зоны")
+        '     ContainerDb(db_geo_cache, "In-memory кеш", "Redis", "Кеширование данных")            
+        '     ContainerDb(db_search, "Поисковый индекс", "Elasticsearch", "Геопоиск водителей")
+        ' }
 
-        System_Boundary(fraud_service_sys, "Fraud Service") {
-            Container(fraud_service, "Fraud Service", "Python", "Антифрод сервис — обнаружение мошенничества (перехватывает данные из Kafka)")
-            ContainerDb(fraud_service_db, "Fraud Service DB", "PostgreSQL", "Данные для проверок (payments, bookings)")
-        }
+        Container(fraud_service_sys, "Fraud Service", "Python", "Антифрод сервис — обнаружение мошенничества (перехватывает данные из Kafka)")
+        ' System_Boundary(fraud_service_sys, "Fraud Service") {
+        '     Container(fraud_service_sys, "Fraud Service", "Python", "Антифрод сервис — обнаружение мошенничества (перехватывает данные из Kafka)")
+        '     ContainerDb(fraud_service_db, "Fraud Service DB", "PostgreSQL", "Данные для проверок (payments, bookings)")
+        ' }
 
-        System_Boundary(analitics_service_sys, "Analytics Service") {
-            Container(analitics_service, "Analytics Service", "Python", "Сервис аналитики — сбор аналитики (перехватывает данные из Kafka)")
-            Container(analytics_engine, "Analytics Engine", "Spark/Flink", "Обработка данных")
-            Container(analytics_db, "Analytics DB", "ClickHouse", "Хранение аналитики")
-            Container(datalens, "DataLens", "BI Tool", "Визуализация отчётов")
-        }
+        Container(analitics_service_sys, "Analytics Service", "Python", "Сервис аналитики — сбор аналитики (перехватывает данные из Kafka)")
+        ' System_Boundary(analitics_service_sys, "Analytics Service") {
+        '     Container(analitics_service_sys, "Analytics Service", "Python", "Сервис аналитики — сбор аналитики (перехватывает данные из Kafka)")
+        '     Container(analytics_engine, "Analytics Engine", "Spark/Flink", "Обработка данных")
+        '     Container(analytics_db, "Analytics DB", "ClickHouse", "Хранение аналитики")
+        '     Container(datalens, "DataLens", "BI Tool", "Визуализация отчётов")
+        ' }
     }
 }
 
@@ -95,115 +103,111 @@ System_Ext(bank_api, "API Банка", "Банковские выплаты")
 ' ### ТОЧКИ ВХОДА (C1 step-11) ###
 BiRel(api_gateway, auth_server, "Аутентификация", "OIDC / JWT")
 
-Rel(api_gateway, booking_service, "REST", "REST API")
-Rel(api_gateway, geo_service, "REST", "REST API")
-Rel(api_gateway, pricing_service, "REST", "REST API")
-Rel(api_gateway, driver_service, "REST", "REST API")
-Rel(api_gateway, payments_service, "REST", "REST API")
-Rel(api_gateway, payouts_service, "REST", "REST API")
+Rel(api_gateway, booking_service_sys, "REST", "REST API")
+Rel(api_gateway, geo_service_sys, "REST", "REST API")
+Rel(api_gateway, pricing_service_sys, "REST", "REST API")
+Rel(api_gateway, driver_service_sys, "REST", "REST API")
+Rel(api_gateway, payments_service_sys, "REST", "REST API")
+Rel(api_gateway, payouts_service_sys, "REST", "REST API")
 
 ' ###############################################################################
 ' ## ВЗАИМОДЕЙСТВИЯ МЕЖДУ МИКРОСЕРВИСАМИ - ВСЕ ЧЕРЕЗ KAFKA
 ' ###############################################################################
 
 ' --- Оркестрация заказов: Booking -> другие сервисы ---
-Rel(booking_service, kafka, "▶ назначает водителя", "Kafka")
-Rel(kafka, driver_service, "▶ назначает водителя", "Kafka")
+Rel(booking_service_sys, kafka, "▶ назначает водителя", "Kafka")
+Rel(kafka, driver_service_sys, "▶ назначает водителя", "Kafka")
 
-Rel(booking_service, kafka, "▶ запрашивает цену", "Kafka")
-Rel(kafka, pricing_service, "▶ запрашивает цену", "Kafka")
+Rel(booking_service_sys, kafka, "▶ запрашивает цену", "Kafka")
+Rel(kafka, pricing_service_sys, "▶ запрашивает цену", "Kafka")
 
-Rel(booking_service, kafka, "▶ инициирует платёж", "Kafka")
-Rel(kafka, payments_service, "▶ инициирует платёж", "Kafka")
+Rel(booking_service_sys, kafka, "▶ инициирует платёж", "Kafka")
+Rel(kafka, payments_service_sys, "▶ инициирует платёж", "Kafka")
 
-Rel(booking_service, kafka, "▶ ищет маршрут", "Kafka")
-Rel(kafka, geo_service, "▶ ищет маршрут", "Kafka")
+Rel(booking_service_sys, kafka, "▶ ищет маршрут", "Kafka")
+Rel(kafka, geo_service_sys, "▶ ищет маршрут", "Kafka")
 
-Rel(booking_service, kafka, "▶ проверяет на мошенничество", "Kafka")
-Rel(kafka, fraud_service, "▶ проверяет на мошенничество", "Kafka")
+Rel(booking_service_sys, kafka, "▶ проверяет на мошенничество", "Kafka")
+Rel(kafka, fraud_service_sys, "▶ проверяет на мошенничество", "Kafka")
 
-Rel(booking_service, kafka, "▶ отправляет уведомления", "Kafka")
-Rel(kafka, notification_service, "▶ отправляет уведомления", "Kafka")
+Rel(booking_service_sys, kafka, "▶ отправляет уведомления", "Kafka")
+Rel(kafka, notification_service_sys, "▶ отправляет уведомления", "Kafka")
 
 ' --- Взаимодействия вне оркестрации ---
-Rel(driver_service, kafka, "▶ расчет заработка", "Kafka")
-Rel(kafka, pricing_service, "▶ расчет заработка", "Kafka")
+Rel(driver_service_sys, kafka, "▶ расчет заработка", "Kafka")
+Rel(kafka, pricing_service_sys, "▶ расчет заработка", "Kafka")
 
-Rel(payments_service, kafka, "▶ проверка транзакций", "Kafka")
-Rel(kafka, fraud_service, "▶ проверка транзакций", "Kafka")
+Rel(payments_service_sys, kafka, "▶ проверка транзакций", "Kafka")
+Rel(kafka, fraud_service_sys, "▶ проверка транзакций", "Kafka")
 
-Rel(payouts_service, kafka, "▶ данные водителя", "Kafka")
-Rel(kafka, driver_service, "▶ данные водителя", "Kafka")
+Rel(payouts_service_sys, kafka, "▶ данные водителя", "Kafka")
+Rel(kafka, driver_service_sys, "▶ данные водителя", "Kafka")
 
-Rel(geo_service, kafka, "▶ метрики геопоиска", "Kafka")
-Rel(kafka, analitics_service, "▶ метрики геопоиска", "Kafka")
+Rel(geo_service_sys, kafka, "▶ метрики геопоиска", "Kafka")
+Rel(kafka, analitics_service_sys, "▶ метрики геопоиска", "Kafka")
 
 ' --- Нотификации: driver -> notification, payments -> notification ---
-Rel(driver_service, kafka, "Нотификации", "Kafka")
-Rel(kafka, notification_service, "Нотификации", "Kafka")
+Rel(driver_service_sys, kafka, "Нотификации", "Kafka")
+Rel(kafka, notification_service_sys, "Нотификации", "Kafka")
 
-Rel(payments_service, kafka, "Нотификации", "Kafka")
-Rel(kafka, notification_service, "Нотификации", "Kafka")
+Rel(payments_service_sys, kafka, "Нотификации", "Kafka")
+Rel(kafka, notification_service_sys, "Нотификации", "Kafka")
 
 ' --- Исполнение заказа: driver -> payouts ---
-Rel(driver_service, kafka, "Исполнение заказа", "Kafka")
-Rel(kafka, payouts_service, "Исполнение заказа", "Kafka")
+Rel(driver_service_sys, kafka, "Исполнение заказа", "Kafka")
+Rel(kafka, payouts_service_sys, "Исполнение заказа", "Kafka")
 
 ' --- Асинхронные события (Kafka заменила RabbitMQ) ---
-Rel(booking_service, kafka, "▶ уведомления и аналитика", "Kafka")
-Rel(payouts_service, kafka, "▶ выплаты", "Kafka")
-Rel(payments_service, kafka, "▶ отчёты", "Kafka")
-Rel(analitics_service, kafka, "▶ события аналитики", "Kafka")
+Rel(booking_service_sys, kafka, "▶ уведомления и аналитика", "Kafka")
+Rel(payouts_service_sys, kafka, "▶ выплаты", "Kafka")
+Rel(payments_service_sys, kafka, "▶ отчёты", "Kafka")
+Rel(analitics_service_sys, kafka, "▶ события аналитики", "Kafka")
 
 ' --- Чтение событий сервисами-потребителями (ранее Celery Tasks) ---
-Rel(kafka, notification_service, "▶ задачи уведомлений", "Kafka")
-Rel(kafka, payouts_service, "▶ задачи выплат", "Kafka")
-Rel(kafka, analitics_service, "▶ задачи аналитики", "Kafka")
+Rel(kafka, notification_service_sys, "▶ задачи уведомлений", "Kafka")
+Rel(kafka, payouts_service_sys, "▶ задачи выплат", "Kafka")
+Rel(kafka, analitics_service_sys, "▶ задачи аналитики", "Kafka")
 
 ' ### ПРЯМЫЕ ОБРАЩЕНИЯ К СВОИМ БАЗАМ ДАННЫХ ###
-Rel(booking_service, booking_service_db, "▶ bookings, drivers", "прямые SQL")
-Rel(driver_service, driver_service_db, "▶ drivers, payouts", "прямые SQL")
-Rel(pricing_service, pricing_service_db, "▶ pricing_rules", "прямые SQL")
-Rel(payments_service, payments_service_db, "▶ payments", "прямые SQL")
-Rel(payouts_service, payouts_service_db, "▶ payouts", "прямые SQL")
-Rel(geo_service, geo_service_db, "▶ drivers, zones", "прямые SQL")
-Rel(fraud_service, fraud_service_db, "▶ payments, bookings", "прямые SQL")
-Rel(notification_service, notification_service_db, "▶ данные уведомлений", "ORM")
+' Rel(booking_service_sys, booking_service_db, "▶ bookings, drivers", "прямые SQL")
+' Rel(driver_service_sys, driver_service_db, "▶ drivers, payouts", "прямые SQL")
+' Rel(pricing_service_sys, pricing_service_db, "▶ pricing_rules", "прямые SQL")
+' Rel(payments_service_sys, payments_service_db, "▶ payments", "прямые SQL")
+' Rel(payouts_service_sys, payouts_service_db, "▶ payouts", "прямые SQL")
+' Rel(geo_service_sys, geo_service_db, "▶ drivers, zones", "прямые SQL")
+' Rel(fraud_service_sys, fraud_service_db, "▶ payments, bookings", "прямые SQL")
+' Rel(notification_service_sys, notification_service_db, "▶ данные уведомлений", "ORM")
 
 ' ### КЕШИРОВАНИЕ ###
-Rel(pricing_service, db_pricing_cache, "▶ кеш ценовых правил", "Redis")
-Rel(notification_service, db_notification_service_cache, "▶ кеш устройств", "Redis")
-Rel(geo_service, db_geo_cache, "▶ кеш геоданных", "Redis")
+' Rel(pricing_service_sys, db_pricing_cache, "▶ кеш ценовых правил", "Redis")
+' Rel(notification_service_sys, db_notification_service_cache, "▶ кеш устройств", "Redis")
+' Rel(geo_service_sys, db_geo_cache, "▶ кеш геоданных", "Redis")
 
 ' ### ГЕОПОИСК ###
-Rel(geo_service, db_search, "▶ поиск водителей", "Elasticsearch API")
+' Rel(geo_service_sys, db_search, "▶ поиск водителей", "Elasticsearch API")
 
 ' ### ВНЕШНИЕ ИНТЕГРАЦИИ ###
-Rel(geo_service, yandex_maps, "▶ геоданные", "Yandex Maps API")
-Rel(payments_service, yandex_pay, "▶ платежи", "Yandex Pay API")
-Rel(notification_service, fcm, "▶ уведомления Android", "REST API")
-Rel(notification_service, apns, "▶ уведомления iOS", "REST API")
-Rel(notification_service, huawei_push, "▶ уведомления Huawei", "REST API")
-Rel(payouts_service, bank_api, "▶ банковские выплаты", "REST API")
+Rel(geo_service_sys, yandex_maps, "▶ геоданные", "Yandex Maps API")
+Rel(payments_service_sys, yandex_pay, "▶ платежи", "Yandex Pay API")
+Rel(notification_service_sys, fcm, "▶ уведомления Android", "REST API")
+Rel(notification_service_sys, apns, "▶ уведомления iOS", "REST API")
+Rel(notification_service_sys, huawei_push, "▶ уведомления Huawei", "REST API")
+Rel(payouts_service_sys, bank_api, "▶ банковские выплаты", "REST API")
 
 ' ### МОНИТОРИНГ - МЕТРИКИ ###
-Rel(booking_service, monitoring, "▶ метрики бронирований", "Prometheus")
-Rel(payments_service, monitoring, "▶ метрики платежей", "Prometheus")
-Rel(notification_service, monitoring, "▶ метрики уведомлений", "Prometheus")
-Rel(payouts_service, monitoring, "▶ метрики выплат", "Prometheus")
+Rel(booking_service_sys, monitoring, "▶ метрики бронирований", "Prometheus")
+Rel(payments_service_sys, monitoring, "▶ метрики платежей", "Prometheus")
+Rel(notification_service_sys, monitoring, "▶ метрики уведомлений", "Prometheus")
+Rel(payouts_service_sys, monitoring, "▶ метрики выплат", "Prometheus")
 
-Rel(booking_service_db, monitoring, "▶ метрики БД", "PostgreSQL Exporter")
-Rel(driver_service_db, monitoring, "▶ метрики БД", "PostgreSQL Exporter")
-Rel(pricing_service_db, monitoring, "▶ метрики БД", "PostgreSQL Exporter")
-Rel(payments_service_db, monitoring, "▶ метрики БД", "PostgreSQL Exporter")
-Rel(payouts_service_db, monitoring, "▶ метрики БД", "PostgreSQL Exporter")
-Rel(notification_service_db, monitoring, "▶ метрики БД", "PostgreSQL Exporter")
-Rel(geo_service_db, monitoring, "▶ метрики БД", "PostgreSQL Exporter")
-Rel(fraud_service_db, monitoring, "▶ метрики БД", "PostgreSQL Exporter")
-
-Rel(db_geo_cache, monitoring, "▶ метрики кэша", "")
-Rel(db_pricing_cache, monitoring, "▶ метрики кэша", "")
-Rel(db_notification_service_cache, monitoring, "▶ метрики кэша", "")
+Rel(booking_service_sys, monitoring, "▶ метрики БД", "PostgreSQL Exporter")
+Rel(driver_service_sys, monitoring, "▶ метрики БД", "PostgreSQL Exporter")
+Rel(pricing_service_sys, monitoring, "▶ метрики БД, метрики кэша", "PostgreSQL Exporter")
+Rel(payments_service_sys, monitoring, "▶ метрики БД", "PostgreSQL Exporter")
+Rel(payouts_service_sys, monitoring, "▶ метрики БД", "PostgreSQL Exporter")
+Rel(notification_service_sys, monitoring, "▶ метрики БД, метрики кэша", "PostgreSQL Exporter")
+Rel(geo_service_sys, monitoring, "▶ метрики БД, метрики кэша", "PostgreSQL Exporter")
+Rel(fraud_service_sys, monitoring, "▶ метрики БД", "PostgreSQL Exporter")
 
 Rel(kafka, monitoring, "▶ метрики очередей", "Kafka Exporter")
 
@@ -212,18 +216,18 @@ Rel(grafana, monitoring, "▶ запросы метрик", "PromQL")
 Rel(monitoring, alert_manager, "▶ алерты", "Alert Rules")
 
 ' ### МОНИТОРИНГ - ЛОГИ ###
-Rel(booking_service, loki, "▶ логи бронирований", "Loki Logs")
-Rel(payments_service, loki, "▶ логи платежей", "Loki Logs")
-Rel(notification_service, loki, "▶ логи уведомлений", "Loki Logs")
-Rel(payouts_service, loki, "▶ логи выплат", "Loki Logs")
+Rel(booking_service_sys, loki, "▶ логи бронирований", "Loki Logs")
+Rel(payments_service_sys, loki, "▶ логи платежей", "Loki Logs")
+Rel(notification_service_sys, loki, "▶ логи уведомлений", "Loki Logs")
+Rel(payouts_service_sys, loki, "▶ логи выплат", "Loki Logs")
 Rel(api_gateway, loki, "▶ логи приложения", "Loki Logs")
 Rel(auth_server, loki, "▶ логи приложения", "Loki Logs")
 
 ' ### АНАЛИТИКА ###
-Rel(analitics_service, analytics_engine, "▶ отправка событий", "Kafka")
-Rel(analitics_service, analytics_engine, "▶ обработка данных", "Spark Jobs")
-Rel(analytics_engine, analytics_db, "▶ запись данных", "ETL")
-Rel(analytics_db, datalens, "▶ визуализация отчётов", "SQL")
+' Rel(analitics_service_sys, analytics_engine, "▶ отправка событий", "Kafka")
+' Rel(analitics_service_sys, analytics_engine, "▶ обработка данных", "Spark Jobs")
+' Rel(analytics_engine, analytics_db, "▶ запись данных", "ETL")
+' Rel(analitics_service_sys, datalens, "▶ визуализация отчётов", "SQL")
 
 ' ### CI/CD ###
 Rel(jenkins, artifact_repo, "▶ управление образами", "Docker API")
