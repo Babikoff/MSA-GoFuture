@@ -52,25 +52,92 @@
 
 ### 3.5.1 Выбор подходов к мониторингу ###
 
+При выборе подхода к мониторингу руководствуемся следующими принципами:
+
+1. Сохраняем метрики фактов бизнес-событий и их количественные показатели.
+2. Сохраняем стандартные технические метрики задействованных в системе серверов и платформ. Для каждого такого объекта мониторинга сохраняем параметры:
+- Процент загрузки
+- Задержка (видимое)
+- Трафик (RPS)
+- Ошибки (total errors)
+- Метрики насыщения (длина очереди и т.п)
+3. Сохраняем специфические ключевые параметры каждой платформы (cache hits rate, кол-во обращений к диску и т.п.)
+
 ### 3.5.2 Бизнес-метрики для мониторинга ###
 
-| Код метрики | Название | Источник | Описание |
-|---|---|---|---|
-| **booking_service_sys** |  | "бронирований" ||
-| **payments_service_sys** |  | платежей ||
-| **notification_service_sys** |  | уведомлений ||
-| **payouts_service_sys** |  | выплат ||
-| **booking_service_sys** |  | БД", "PostgreSQL Exporter ||
-| **driver_service_sys** |  | БД", "PostgreSQL Exporter ||
-| **pricing_service_sys** |  | БД, метрики кэша", "PostgreSQL Exporter ||
-| **payments_service_sys** |  | БД", "PostgreSQL Exporter ||
-| **payouts_service_sys** |  | БД", "PostgreSQL Exporter ||
-| **notification_service_sys** |  | БД, метрики кэша", "PostgreSQL Exporter ||
-| **geo_service_sys** |  | БД, метрики кэша", "PostgreSQL Exporter ||
-| **fraud_service_sys** |  | БД", "PostgreSQL Exporter ||
+**Сервис заказов (booking service)**
+
+| Код метрики | Описание |
+|---|---|
+| **booking_service.created** | Заказы поездок (бронирования) |
+| **booking_service.started** | Начатые поездки |
+| **booking_service.finished** | Законченные поездки |
+| **booking_service.canceled** | Отменённые поездки |
+| **booking_service.waiting_time** | Время от заказа до начала поездки |
+| **booking_service.driver_waiting_time** | Время ожидание пассажира водителем |
+| **booking_service.duration** | Продолжительность поездок |
+
+**Сервис водителей (driver service)**
+| Код метрики | Описание |
+|---|---|
+| **driver_service.available_drivers** | Кол-во водителей, готовых принять заказ |
+| **driver_service.drivers_in_trips** | Кол-во водителей в поездке |
+
+**Сервис ценообразования (pricing service)**
+| Код метрики | Описание |
+|---|---|
+| **pricing_service.prices_calc_count** | Кол-во расчётов цен поездки |
+| **pricing_service.prices_avg** | Средняя расчитанная цена поездки |
+
+**Сервис приёма платежей (payments service)**
+| Код метрики | Описание |
+|---|---|
+| **payments_service.started_payments** | Начатые платежи |
+| **payments_service.finished_payments** | Успешные платежи |
+| **payments_service.avg_payment_time** | Среднее время проведения платежей |
+| **payments_service.refunded_payments** | Возвраты |
+| **payments_service.avg_payment** | Средний платёж |
+| **payments_service.payments_total_sum** | Сумма платежей |
+
+**Выплаты водителям (payouts service)**
+| Код метрики | Описание |
+|---|---|
+| **payouts_service.started_payouts** | Начатые выплаты |
+| **payouts_service.finished_payouts** | Произведённые выплаты |
+| **payouts_service.payouts_total_sum** | Сумма всех выплат |
+| **payouts_service.avg_payout** | Средняя выплата |
+
+**Сервис уведомлений (notification service)**
+| Код метрики | Описание |
+|---|---|
+| **notification_service.sent_notifications** | Отправленные |
+| **notification_service.delivered_notifications** | Доставленные |
+| **notification_service.failed_notifications** | Ошибки |
+| **notification_service.retries_count** | Среднее кол-во повторных попыток отправки |
+| **notification_service.delivery_duration** | Среднее время доставки |
+
+**Антифрод сервис ((anti-)fraud service)**
+| Код метрики | Описание |
+|---|---|
+| **fraud_service.autochecks_count** | Кол-во автоматических проверок |
+| **fraud_service.triggered_cases** | Кол-во активированных ручных проверок |
+| **fraud_service.real_cases** | Кол-во обнаруженных нарушений |
 
 ### 3.5.3 Метрики запросов к внешним ресурсам ###
 
+Для вызовов во все внешние сервисы сохраняем метрики:
+
+| Код метрики | Описание | Источник | Пример |
+|---|---|---|---|
+| **RPS** | Кол-во запросов в сек. | Каждый микросервис, APIGateway и Auth serever | *yandex_pay.rps* |
+| **Errors** | Кол-во ошибок (с кодом ошибки) | Каждый микросервис, APIGateway и Auth serever | *yandex_pay.errors* |
+| **Duration** | Среднее время обработки запроса | Каждый микросервис, APIGateway и Auth serever | *yandex_pay.duration* |
+
+Для финансовых серивисов "API Банка" и "Яндекс Пэй" сохраняем среднюю оплату и сумму платежей
+| Код метрики | Описание |
+|---|---|
+| **yandex_pay.payouts_total_sum** | Сумма всех выплат |
+| **yandex_pay.avg_payout** | Средняя выплата |
 
 ### 3.5.4 Технические метрики для мониторинга ###
 
@@ -81,7 +148,7 @@
 | Код метрики | Описание | Источник | Пример |
 |---|---|---|---|
 | **RPS** | Кол-во запросов в сек. | Каждый микросервис, APIGateway и Auth serever | *booking_service.rps* |
-| **Errors** | Кол-во ошибок | Каждый микросервис, APIGateway и Auth serever | *booking_service.errors* |
+| **Errors** | Кол-во ошибок (с кодом ошибки) | Каждый микросервис, APIGateway и Auth serever | *booking_service.errors* |
 | **Duration** | Среднее время обработки запроса | Каждый микросервис, APIGateway и Auth serever | *booking_service.duration* |
 
 **Метрики серверов баз данных сервисов**
