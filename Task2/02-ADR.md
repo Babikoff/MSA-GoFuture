@@ -22,17 +22,7 @@
 
 ## 2. Требования
 
-### Функциональные
-
-**FURPS+**:
-
-| Категория | Требование |
-|-|-|
-| **ФТ-1** | Оптимизация загрузки водителей в часы пик с помощью «умного» перераспределения (ожидание 
-### Нефункциональные
-| Категория | Требование | Критичность |
-|-|-|-|
-| **НФТ-1** | Обработка 500 тысяч конкурентных поездок. | Высокая |
+См. `Task1\01-ADR.md`
 
 ---
 
@@ -44,11 +34,34 @@
 |---|---|---|---|
 | **** |  |  |  |
 
+
 ### 3.2 Схема топиков в Kafka ###
+
+| Код топика | Описание данных| Producer | Consumer |
+|---|---|---|---|
+| **booking-saga.get_driver** | Запрос водителя на заказ | booking_service | driver_service |
+| **booking-saga.get_drivers_resp** | Данные водителя водителя для заказа/нет доступных | driver_service  | booking_service|
+| **booking-saga.get_price** | Запрос цены | booking_service | pricing_service |
+| **booking-saga.get_price_resp** | Цена заказа/ошибка расчёты цены | pricing_service | booking_service |
+| **booking-saga.start_payment** | Запрос оплаты поездки | booking_service | payments_service |
+| **booking-saga.start_payment_resp** | Оплата поездки/Ошибка оплаты | payments_service | booking_service |
+| **booking-saga.request_route** | Запрос маршрута | booking_service | geo_service |
+| **booking-saga.order_completed** | Исполнение заказа | driver_service | payouts_service |
+| **booking-saga.check_fraud** | Автоматически проверяет на мошенничество крупные заказы | booking_service | fraud_service |
+| **booking-service.notifications** | Уведомления | booking_service | notification_service |
+| **booking-service.notifications** | Уведомления | driver_service | notification_service |
+| **booking-service.notifications** | Уведомления | payments_service | notification_service |
+| **driver-payment-saga.get_trips** | Получить поездки | driver_service | booking_service |
+| **driver-payment-saga.pricing_service** | Получить цены поездок | driver_service | pricing_service |
+| **analitics** | Метрики геопоиска | analitics_service | analitics_service |
 
 ### 3.3 Выбор типа SAGA и реестр событий SAGA ###
 
-### 3.4 Выбор механизмов обеспечения надёжной доставки ###
+Для реализации двух обнаруженных бизнес-процессов: "заказ такси" и "выплаты водителю" предлагается использовать **Parallel Saga**. Parallel Saga позволяет управлять сложными бизнес-процессами, отностильно легко изменять количество участвующих в них микросервисов и даёт высокую производительность.
+
+### 3.4 Выбор механизмов обеспечения надёжной доставки данных между сервисами ###
+
+Для доставки данных между сервисами выбран брокер сообщений **Kafka** в котором реализованны современные механизмы отказоустойчивости и повышения производительности.
 
 ### 3.5.1 Выбор подходов к мониторингу ###
 
@@ -196,24 +209,3 @@
 1. **Prometheus** - осуществляет сбор метрик.
 2. **Grafana** - позволяет организовать визуализацию метрик в формате удобном сотрудникам отделов мониторинга.
 3. **Alertmanager** - позволяет настраивать логику управления алертами.
-
-### Последствия ###
-
-**✅ Положительные:**
-
-
-**⚠️ Негативные:**
-
-1. Усложнение инфраструктуры.
-2. Потребуется больше инженеров.
-
-**↗️ Зависимости:**
-
-1. Появляется новая зависимость от систем контейнеризации.
----
-
-### 4. Альтернативы
-
-
-### 5. Риски
-
