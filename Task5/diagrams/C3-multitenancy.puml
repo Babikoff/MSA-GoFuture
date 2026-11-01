@@ -11,7 +11,7 @@ Person(manager, "Корпоративный менеджер", "Управляе
 Person(driver, "Водитель", "Принимает заказы, управляет поездками\nи получает выплаты") 
 
 Component(api_gateway, "API Gateway/BFF", "Извлекает tenantId из JWT-токена")
-Component(auth_server, "Auth server", "Keycloak (единиый центр аутентификации)", "Задействована поддержка мультитенантности с помощью механизма Realm-ов:\nодин Realm - один тенант")
+Component(auth_server, "Auth server", "Keycloak (единый центр аутентификации)", "Задействована поддержка мультитенантности с помощью механизма Realm-ов:\nодин Realm - один тенант")
 ContainerDb(all_tenants_db, "БД тенантов", "Хранит список всех тенантов и параметры соединений с их данными")
 
 System_Boundary(tenant, "Tenant") {
@@ -23,14 +23,22 @@ System_Boundary(tenant, "Tenant") {
   }
 }
 
-System_Boundary(shared_tenants_data_standard, "Разделямые данные всех тенантов уровня Standard") {
+System_Boundary(shared_tenants_data_standard, "Разделяемые данные всех тенантов уровня Standard") {
   ContainerDb(shared_db_standard, "Общий сервер БД тенантов", "PostgreSQL", "")
   ContainerQueue(shared_queue_standard, "Общий сервер брокера-сообщений тенантов", "Kafka", "")
 }
 
-System_Boundary(shared_tenants_data_starter, "Разделямые данные всех тенантов уровня Trial") {
+System_Boundary(shared_tenants_data_starter, "Разделяемые данные всех тенантов уровней Starter и Trial") {
   ContainerDb(shared_db_starter, "Общий сервер БД тенантов", "PostgreSQL", "")
   ContainerQueue(shared_queue_starter, "Общий сервер брокера-сообщений тенантов", "Kafka", "")
+}
+
+System_Boundary(monitoring_system, "Система мониторинга") {
+  Component(grafana, "Grafana", "Визуализация", "Мультитенантные Organizations (1 Org = 1 Tenant).\nSSO авторизация через Keycloak")
+  Component(prom_label_proxy, "prom-label-proxy", "Прокси безопасности", "Принудительно подставляет селектор tenant_id в PromQL-запросы тенантов")
+  Component(prometheus, "Prometheus", "TSDB", "Сбор, хранение и разметка метрик (relabeling по tenant_id)")
+  Component(pg_exporter, "postgres_exporter", "Сбор метрик БД", "Сбор метрик по схемам (Standard) и кастомных метрик по tenant_id (Starter/Trial)")
+  Component(kfk_exporter, "kafka_exporter", "Сбор метрик брокера", "Сбор метрик по топикам (Standard) и партициям (Starter/Trial)")
 }
 
 ' СВЯЗИ
@@ -50,6 +58,20 @@ Rel(global_admin, all_tenants_db, "Может вмешиваться в рабо
 Rel(local_admin, api_gateway, "Управляет тенантом")
 
 BiRel(api_gateway, auth_server, "Аутентификация")
+
+' Мониторинг связи
+Rel(pg_exporter, shared_db_standard, "Сбор метрик схем")
+Rel(pg_exporter, shared_db_starter, "Сбор метрик таблиц/tenant_id")
+Rel(kfk_exporter, shared_queue_standard, "Сбор метрик топиков")
+Rel(kfk_exporter, shared_queue_starter, "Сбор метрик партиций")
+Rel(prometheus, pg_exporter, "Scrape метрик БД")
+Rel(prometheus, kfk_exporter, "Scrape метрик Kafka")
+Rel(prom_label_proxy, prometheus, "Проксирование с фильтром tenant_id")
+Rel(grafana, prom_label_proxy, "Запрос метрик тенанта через прокси")
+Rel(grafana, prometheus, "Прямой запрос метрик для Глобального администратора")
+Rel(local_admin, grafana, "Просмотр метрик своего тенанта (в рамках Org тенанта)")
+Rel(global_admin, grafana, "Просмотр всех метрик платформы")
+BiRel(grafana, auth_server, "SSO аутентификация и распределение по Org")
 
 SHOW_LEGEND()
 
