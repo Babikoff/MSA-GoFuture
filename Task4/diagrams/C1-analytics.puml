@@ -1,0 +1,91 @@
+@startuml Context_Diagram_With_Payouts
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+AddRelTag("kafka", $lineColor="green",$textColor="green", $lineStyle=SolidLine())
+AddRelTag("ml", $lineColor="EF6C00",$textColor="EF6C00", $lineStyle=SolidLine())
+AddSystemTag("ml", $bgColor="#EF6C00", $fontColor="white", $borderColor="#EF6C00")
+AddSystemTag("kafka", $bgColor="green", $borderColor="yellow")
+
+Person(passenger, "Пассажир", "Заказывает, отслеживает и оплачивает поездки")
+Person(driver, "Водитель", "Принимает заказы, управляет поездками\nи получает выплаты") 
+Person(manager, "Корпоративный менеджер", "Управляет корпоративными поездками и счетами")
+Person(accountant, "Бухгалтер", "Контролирует выплаты водителям")
+Person(global_analysts, "Аналитик", "Анализирует данные")
+Person(ml_enginer, "Инженер машинного обучение", "Производит обучение и проверку моделей")
+
+System_Boundary(booking_service_sys, "GoFuture региональная платформа") {
+  System(api_gateway, "API Gateway", "Kong или NGINX (маршрутизация, API versioning)")
+  System(auth_server, "Auth server", "Keycloak (единиый центр аутентификации)")
+  System(booking_service, "Booking service", "Сервис заказов")
+  System(notification_service, "Notification Service", "Сервис нотификаций")
+  System(geo_service, "Geography Service", "Гео сервис")
+  System(pricing_service, "Pricing Service", "Сервис тарификации")
+  System(driver_service, "Driver Service", "Сервис водителей")
+  System(payments_service, "Payments Service", "Сервис приёма платежей")
+  System(payouts_service, "Payouts Service", "Сервис выплат водителям")
+  System(fraud_service, "Fraud Service", "Антифрод сервис")
+  System_Boundary(analitics_service_sys, "Analytics Service") {
+    System(analitics_service, "Analitics Service", "Сервис аналитики")
+    System(analytics_engine, "Analytics Engine", "Spark/Flink\n[Обработка данных]")
+  }  
+  System(kafka, "Kafka", "Брокер сообщений", $tags="kafka")
+  System(ml_service, "ML Prediction Service", "Сервис ML прогнозирования", $tags="ml")
+}
+
+' Глобальная аналитика
+System_Boundary(global_analytics_service_sys, "Глобальная аналитическая система") {
+  System(global_analytics_db, "Analytics DB", "ClickHouse", "Хранение аналитики")
+  System(global_datalens, "DataLens", "BI Tool\n[Визуализация отчётов]")
+  System(global_ml, "Machine Learning", "Обучение моделей", $tags="ml")
+}
+
+' Аналитика
+Rel(analitics_service, analytics_engine, "Обработка данных", "Spark Jobs")
+Rel(analytics_engine, global_analytics_db, "Обезличенные и агрегированные данные", "ETL")
+Rel(global_analytics_db, global_datalens, "Визуализация отчётов")
+Rel(global_analysts, global_datalens, "Просматривает отчёты")
+
+' API Gateway
+Rel(passenger, api_gateway, "Использует для заказа поездок")
+Rel(driver, api_gateway, "Использует для работы и получения выплат")
+Rel(manager, api_gateway, "Использует для управления счетами")
+Rel(accountant, api_gateway, "Контролирует выплаты через")
+
+BiRel(api_gateway, auth_server, "Аутентификация")
+
+Rel(api_gateway, booking_service, "REST")
+Rel(api_gateway, geo_service, "REST")
+Rel(api_gateway, pricing_service, "REST")
+Rel(api_gateway, driver_service, "REST")
+Rel(api_gateway, payments_service, "REST")
+Rel(api_gateway, payouts_service, "REST")
+
+' Нотификации
+Rel(driver_service, kafka, "Нотификации", $tags="kafka")
+Rel(payments_service, kafka, "Нотификации", $tags="kafka")
+Rel(kafka, notification_service, "Нотификации", $tags="kafka")
+
+' Оркестрация
+Rel(booking_service, kafka, "Запрос маршрута, цены, поиск водителя, инициирует платёж, нотификации", $tags="kafka")
+Rel(kafka, geo_service, "Запрос маршрута", $tags="kafka")
+Rel(kafka, pricing_service, "Запрос цены", $tags="kafka")
+Rel(kafka, payments_service, "Инициирует платёж", $tags="kafka")
+Rel(kafka, driver_service, "Поиск водителя", $tags="kafka")
+Rel(driver_service, kafka, "Исполнение заказа", $tags="kafka")
+Rel(kafka, payouts_service, "Исполнение заказа", $tags="kafka")
+
+' Перехват данных из шины данных
+Rel(kafka, fraud_service, "Данные для анализа", $tags="kafka")
+Rel(kafka, analitics_service, "Данные для анализа", $tags="kafka")
+
+' ML
+Rel(kafka, ml_service, "Запросы на рекомендательные прогнозы", $tags="kafka") 
+Rel(ml_service, kafka, "Рекомендации, предсказания", $tags="kafka") 
+Rel(global_analytics_db, global_ml, "Данные для обучения", $tags="ml")
+Rel(global_ml, ml_service, "Обученные модели", $tags="ml")
+Rel(ml_enginer, global_ml, "Контролирует обучение моделей", $tags="ml")
+Rel(global_datalens, global_ml, "Взаимодействие", $tags="ml")
+
+SHOW_LEGEND()
+
+@enduml

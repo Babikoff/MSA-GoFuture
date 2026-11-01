@@ -1,0 +1,74 @@
+@startuml Context_Diagram_With_Payouts
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+AddRelTag("new", $lineColor="green",$textColor="green", $lineStyle=SolidLine())
+AddSystemTag("new", $bgColor="green", $fontColor="white", $borderColor="green")
+AddSystemTag("Orchestrator", $bgColor="green", $fontColor="yellow", $borderColor="yellow")
+
+Person(passenger, "Пассажир", "Заказывает, отслеживает и оплачивает поездки")
+Person(driver, "Водитель", "Принимает заказы, управляет поездками\nи получает выплаты") 
+Person(manager, "Корпоративный менеджер", "Управляет корпоративными поездками и счетами")
+Person(accountant, "Бухгалтер", "Контролирует выплаты водителям")
+
+System_Boundary(booking_service_sys, "GoFuture Microservices Platform") {
+  System(api_gateway, "API Gateway", "Kong или NGINX (маршрутизация, API versioning)", $tags="new")
+  System(auth_server, "Auth server", "Keycloak (единиый центр аутентификации)", $tags="new")
+  System(booking_service, "Booking service", "Сервис заказов", $tags="Orchestrator")
+  System(notification_service, "Notification Service", "Сервис нотификаций", $tags="new")
+  System(geo_service, "Geography Service", "Гео сервис", $tags="new")
+  System(pricing_service, "Pricing Service", "Сервис тарификации", $tags="new")
+  System(driver_service, "Driver Service", "Сервис водителей", $tags="new")
+  System(payments_service, "Payments Service", "Сервис приёма платежей", $tags="new")
+  System(payouts_service, "Payouts Service", "Сервис выплат водителям", $tags="new")
+  System(fraud_service, "Fraud Service", "Антифрод сервис (перехватывает нужные данные из Kafka)", $tags="new")
+  System(analitics_service, "Analitics Service", "Сервис аналитики (перехватывает нужные данные из Kafka)", $tags="new")
+}
+
+System_Boundary(ext_sys, "Внешние системы") {
+  System_Ext(yandex_pay, "Яндекс Пэй", "Обрабатывает платёжные транзакции")
+  System_Ext(yandex_maps, "Яндекс Карты", "Предоставляет геоданные и маршруты")
+  System_Ext(fcm, "Firebase Cloud Messaging", "Отправляет уведомления для iOS/Android")
+  System_Ext(apns, "Apple Push Notification Service", "Отправляет уведомления для iOS")
+  System_Ext(huawei_push, "Huawei Push Kit", "Отправляет уведомления для Huawei devices")
+  System_Ext(bank_api, "API Банка", "Обрабатывает банковские выплаты")
+}
+
+Rel(passenger, api_gateway, "Использует для заказа поездок")
+Rel(driver, api_gateway, "Использует для работы и получения выплат")
+Rel(manager, api_gateway, "Использует для управления счетами")
+Rel(accountant, api_gateway, "Контролирует выплаты через")
+
+BiRel(api_gateway, auth_server, "Аутентификация", $tags="new")
+
+Rel(api_gateway, booking_service, "REST", $tags="new")
+Rel(api_gateway, geo_service, "REST", $tags="new")
+Rel(api_gateway, pricing_service, "REST", $tags="new")
+Rel(api_gateway, driver_service, "REST", $tags="new")
+Rel(api_gateway, payments_service, "REST", $tags="new")
+Rel(api_gateway, payouts_service, "REST", $tags="new")
+
+' Нотификации
+Rel(booking_service, notification_service, "Нотификации", $tags="new")
+Rel(driver_service, notification_service, "Нотификации", $tags="new")
+Rel(payments_service, notification_service, "Нотификации", $tags="new")
+
+' Оркестрация
+Rel(booking_service, geo_service, "Ищет маршрут", $tags="new")
+Rel(booking_service, pricing_service, "Запрашивает цену", $tags="new")
+Rel(booking_service, payments_service, "Инициирует платёж", $tags="new")
+Rel(booking_service, driver_service, "Назначает водителя", $tags="new")
+
+' Взаимодействия вне оркестрации
+Rel(driver_service, payouts_service, "Исполнение заказа", $tags="new")
+
+' Внешние взаимодействия
+Rel(payments_service, yandex_pay, "Обрабатывает платежи через", $tags="new")
+Rel(geo_service, yandex_maps, "Запрашивает геоданные через", $tags="new")
+Rel(notification_service, fcm, "Отправляет уведомления через", $tags="new")
+Rel(notification_service, apns, "Отправляет уведомления через", $tags="new")
+Rel(notification_service, huawei_push, "Отправляет уведомления через", $tags="new")
+Rel(payouts_service, bank_api, "Инициирует выплаты через", $tags="new")
+
+SHOW_LEGEND()
+
+@enduml
