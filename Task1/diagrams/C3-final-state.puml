@@ -241,4 +241,5 @@ Rel(jenkins, microservice_platform, "▶ деплой микросервисов
 
 Rel(artifact_repo, microservice_platform, "▶ хранение образов", "Docker Registry")
 
+SHOW_LEGEND()
 @enduml
