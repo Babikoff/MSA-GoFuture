@@ -1,0 +1,56 @@
+@startuml Multitenancy
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+AddRelTag("new", $lineColor="green",$textColor="green", $lineStyle=SolidLine())
+AddSystemTag("new", $bgColor="green", $fontColor="white", $borderColor="green")
+AddSystemTag("Orchestrator", $bgColor="green", $fontColor="yellow", $borderColor="yellow")
+
+Person(global_admin, "Глобальный администратор", "Управляет тенантами и всей системой")
+Person(local_admin, "Администратор тенанта", "Управляет тенантом")
+Person(manager, "Корпоративный менеджер", "Управляет корпоративными поездками и счетами")
+Person(driver, "Водитель", "Принимает заказы, управляет поездками\nи получает выплаты") 
+
+Component(api_gateway, "API Gateway", "Kong или NGINX (маршрутизация, API versioning)", $tags="new")
+Component(auth_server, "Auth server", "Keycloak (единиый центр аутентификации)")
+ContainerDb(all_tenants_db, "БД тенантов", "Хранит список всех тенантов и параметры соединений с их данными")
+
+System_Boundary(tenant, "Tenant") {
+  Component(tenant_microservices, "Microservices", "Отвечают за бизнес-логику")
+  Component(data_abstraction_layer, "Слой абстракции данных", "Отвечают за работу с соответствующими тенанту данными")
+  System_Boundary(tenant_data, "Данные тенанта") {
+    ContainerDb(tenant_db, "Сервер БД тенанта\n(Для клиентов уровня Enterprise)", "PostgreSQL", "")
+    ContainerQueue(tenant_queue, "Сервер брокера-сообщений тенанта\n(Для клиентов уровня Enterprise )", "Kafka", "")
+  }
+}
+
+System_Boundary(shared_tenants_data_standard, "Разделямые данные всех тенантов уровня Standard") {
+  ContainerDb(shared_db_standard, "Общий сервер БД тенантов", "PostgreSQL", "")
+  ContainerQueue(shared_queue_standard, "Общий сервер брокера-сообщений тенантов", "Kafka", "")
+}
+
+System_Boundary(shared_tenants_data_starter, "Разделямые данные всех тенантов уровня Starter") {
+  ContainerDb(shared_db_starter, "Общий сервер БД тенантов", "PostgreSQL", "")
+  ContainerQueue(shared_queue_starter, "Общий сервер брокера-сообщений тенантов", "Kafka", "")
+}
+
+' СВЯЗИ
+BiRel(api_gateway, tenant_microservices, "")
+Rel(data_abstraction_layer, all_tenants_db, "Получает параметры соединений данными тенанта")
+
+' Связи тенантов с их данными
+BiRel(tenant_microservices, data_abstraction_layer, "Чтение/запись бизнес-данных")
+BiRel(data_abstraction_layer, tenant_data, "Чтение/запись своих бизнес-данных")
+BiRel(data_abstraction_layer, shared_tenants_data_standard, "Разделение/перенаправление по tenantId")
+BiRel(data_abstraction_layer, shared_tenants_data_starter, "Разделение/перенаправление по tenantId")
+
+Rel(driver, api_gateway, "Использует для работы и получения выплат")
+Rel(manager, api_gateway, "Использует для управления счетами")
+Rel(global_admin, api_gateway, "Управляет всей системой")
+Rel(global_admin, all_tenants_db, "Может вмешиваться в работу глобальной базы тенантов")
+Rel(local_admin, api_gateway, "Управляет тенантом")
+
+BiRel(api_gateway, auth_server, "Аутентификация")
+
+SHOW_LEGEND()
+
+@enduml
