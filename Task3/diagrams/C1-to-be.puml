@@ -100,41 +100,41 @@ System_Boundary(booking_service_sys_latam, "GoFuture Microservices Platform - LA
 System_Boundary(booking_service_sys, "GoFuture Microservices Platform - RU") {
   System(api_gateway, "API Gateway", "Kong или NGINX (маршрутизация, API versioning)")
   System(auth_server, "Auth server", "Keycloak (единиый центр аутентификации)")
-  System(user_info_service, "User info service", "Сервис пользователей", $tags="new")
-  System(booking_service, "Booking service", "Сервис заказов")
-  System(notification_service, "Notification Service", "Сервис нотификаций")
-  System(geo_service, "Geography Service", "Гео сервис")
-  System(pricing_service, "Pricing Service", "Сервис тарификации")
-  System(driver_service, "Driver Service", "Сервис водителей")
-  System(payments_service, "Payments Service", "Сервис приёма платежей")
-  System(payouts_service, "Payouts Service", "Сервис выплат водителям")
-  System(fraud_service, "Fraud Service", "Антифрод сервис (перехватывает нужные данные из Kafka)")
-  System(analitics_service, "Analitics Service", "Сервис аналитики (перехватывает нужные данные из Kafka)")
+  System(user_info_service_ru, "User info service", "Сервис пользователей", $tags="new")
+  System(booking_service_ru, "Booking service", "Сервис заказов")
+  System(notification_service_ru, "Notification Service", "Сервис нотификаций")
+  System(geo_service_ru, "Geography Service", "Гео сервис")
+  System(pricing_service_ru, "Pricing Service", "Сервис тарификации")
+  System(driver_service_ru, "Driver Service", "Сервис водителей")
+  System(payments_service_ru, "Payments Service", "Сервис приёма платежей")
+  System(payouts_service_ru, "Payouts Service", "Сервис выплат водителям")
+  System(fraud_service_ru, "Fraud Service", "Антифрод сервис (перехватывает нужные данные из Kafka)")
+  System(analitics_service_ru, "Analitics Service", "Сервис аналитики (перехватывает нужные данные из Kafka)")
   Rel(global_dns, api_gateway, "", $tags="new")
 
   BiRel(api_gateway, auth_server, "Аутентификация")
 
-  Rel(api_gateway, booking_service, "REST")
-  Rel(api_gateway, geo_service, "REST")
-  Rel(api_gateway, pricing_service, "REST")
-  Rel(api_gateway, driver_service, "REST")
-  Rel(api_gateway, payments_service, "REST")
-  Rel(api_gateway, payouts_service, "REST")
+  Rel(api_gateway, booking_service_ru, "REST")
+  Rel(api_gateway, geo_service_ru, "REST")
+  Rel(api_gateway, pricing_service_ru, "REST")
+  Rel(api_gateway, driver_service_ru, "REST")
+  Rel(api_gateway, payments_service_ru, "REST")
+  Rel(api_gateway, payouts_service_ru, "REST")
 
   ' Нотификации
-  Rel(booking_service, notification_service, "Нотификации")
-  Rel(driver_service, notification_service, "Нотификации")
-  Rel(payments_service, notification_service, "Нотификации")
+  Rel(booking_service_ru, notification_service_ru, "Нотификации")
+  Rel(driver_service_ru, notification_service_ru, "Нотификации")
+  Rel(payments_service_ru, notification_service_ru, "Нотификации")
 
   ' Оркестрация
-  Rel(booking_service, geo_service, "Ищет маршрут")
-  Rel(booking_service, pricing_service, "Запрашивает цену")
-  Rel(booking_service, payments_service, "Инициирует платёж")
-  Rel(booking_service, driver_service, "Назначает водителя")
-  Rel(booking_service, user_info_service, "Получает информацию о пользователе", $tags="new")
+  Rel(booking_service_ru, geo_service_ru, "Ищет маршрут")
+  Rel(booking_service_ru, pricing_service_ru, "Запрашивает цену")
+  Rel(booking_service_ru, payments_service_ru, "Инициирует платёж")
+  Rel(booking_service_ru, driver_service_ru, "Назначает водителя")
+  Rel(booking_service_ru, user_info_service_ru, "Получает информацию о пользователе", $tags="new")
 
   ' Взаимодействия вне оркестрации
-  Rel(driver_service, payouts_service, "Исполнение заказа")
+  Rel(driver_service_ru, payouts_service_ru, "Исполнение заказа")
 }
 
 System_Boundary(ext_sys, "Внешние системы RU") {
@@ -151,21 +151,36 @@ System_Ext(apns, "Apple Push Notification Service", "Отправляет уве
 System_Ext(huawei_push, "Huawei Push Kit", "Отправляет уведомления для Huawei devices")
 
 ' Внешние взаимодействия RU
-Rel(payments_service, yandex_pay, "Обрабатывает платежи через")
-Rel(geo_service, yandex_maps, "Запрашивает геоданные через")
-Rel(notification_service, fcm, "Отправляет уведомления через")
-Rel(notification_service, apns, "Отправляет уведомления через")
-Rel(notification_service, huawei_push, "Отправляет уведомления через")
-Rel(payouts_service, bank_api, "Инициирует выплаты через")
+Rel(payments_service_ru, yandex_pay, "Обрабатывает платежи через")
+Rel(geo_service_ru, yandex_maps, "Запрашивает геоданные через")
+Rel(notification_service_ru, fcm, "Отправляет уведомления через")
+Rel(notification_service_ru, apns, "Отправляет уведомления через")
+Rel(notification_service_ru, huawei_push, "Отправляет уведомления через")
+Rel(payouts_service_ru, bank_api, "Инициирует выплаты через")
 
+' Внешние взаимодействия non-RU
+' LATAM
+Rel(payments_service_latam, google_pay, "Обрабатывает платежи через")
+Rel(payments_service_latam, stripe, "Обрабатывает платежи через")
+Rel(geo_service_latam, google_maps, "Запрашивает геоданные через")
+Rel(notification_service_latam, fcm, "Отправляет уведомления через")
+Rel(notification_service_latam, apns, "Отправляет уведомления через")
+Rel(notification_service_latam, huawei_push, "Отправляет уведомления через")
+' SEA
+Rel(payments_service_sea, google_pay, "Обрабатывает платежи через")
+Rel(payments_service_sea, stripe, "Обрабатывает платежи через")
+Rel(geo_service_sea, google_maps, "Запрашивает геоданные через")
+Rel(notification_service_sea, fcm, "Отправляет уведомления через")
+Rel(notification_service_sea, apns, "Отправляет уведомления через")
+Rel(notification_service_sea, huawei_push, "Отправляет уведомления через")
 
 ' Межрегиональное взаимодействие (SSO / Roaming пользователей)
 Rel(auth_server, auth_server_latam, "Синхронизация учетных данных / OIDC Brokering", "gRPC / mTLS", $tags="new")
 Rel(auth_server_latam, auth_server_sea, "Синхронизация учетных данных / OIDC Brokering", "gRPC / mTLS", $tags="new")
 Rel(auth_server, auth_server_sea, "Синхронизация учетных данных / OIDC Brokering", "gRPC / mTLS", $tags="new")
 
-Rel(user_info_service, user_info_service_latam, "Кросс-региональная репликация профилей", "Kafka MirrorMaker / REST", $tags="new")
+Rel(user_info_service_ru, user_info_service_latam, "Кросс-региональная репликация профилей", "Kafka MirrorMaker / REST", $tags="new")
 Rel(user_info_service_latam, user_info_service_sea, "Кросс-региональная репликация профилей", "Kafka MirrorMaker / REST", $tags="new")
-Rel(user_info_service, user_info_service_sea, "Кросс-региональная репликация профилей", "Kafka MirrorMaker / REST", $tags="new")
+Rel(user_info_service_ru, user_info_service_sea, "Кросс-региональная репликация профилей", "Kafka MirrorMaker / REST", $tags="new")
 
 @enduml
