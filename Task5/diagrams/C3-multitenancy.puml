@@ -10,8 +10,8 @@ Person(local_admin, "Администратор тенанта", "Управля
 Person(manager, "Корпоративный менеджер", "Управляет корпоративными поездками и счетами")
 Person(driver, "Водитель", "Принимает заказы, управляет поездками\nи получает выплаты") 
 
-Component(api_gateway, "API Gateway", "Kong или NGINX (маршрутизация, API versioning)", $tags="new")
-Component(auth_server, "Auth server", "Keycloak (единиый центр аутентификации)")
+Component(api_gateway, "API Gateway/BFF", "Извлекает tenantId из JWT-токена")
+Component(auth_server, "Auth server", "Keycloak (единиый центр аутентификации)", "Задействована поддержка мультитенантности с помощью механизма Realm-ов:\nодин Realm - один тенант")
 ContainerDb(all_tenants_db, "БД тенантов", "Хранит список всех тенантов и параметры соединений с их данными")
 
 System_Boundary(tenant, "Tenant") {
