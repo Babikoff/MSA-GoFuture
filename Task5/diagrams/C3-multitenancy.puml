@@ -28,7 +28,7 @@ System_Boundary(shared_tenants_data_standard, "Разделямые данные
   ContainerQueue(shared_queue_standard, "Общий сервер брокера-сообщений тенантов", "Kafka", "")
 }
 
-System_Boundary(shared_tenants_data_starter, "Разделямые данные всех тенантов уровня Starter") {
+System_Boundary(shared_tenants_data_starter, "Разделямые данные всех тенантов уровня Trial") {
   ContainerDb(shared_db_starter, "Общий сервер БД тенантов", "PostgreSQL", "")
   ContainerQueue(shared_queue_starter, "Общий сервер брокера-сообщений тенантов", "Kafka", "")
 }
